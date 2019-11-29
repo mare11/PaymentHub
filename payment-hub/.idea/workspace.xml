@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="07defc98-a45a-441e-a259-ec7cdb46886a" name="Default Changelist" comment="" />
+    <list default="true" id="07defc98-a45a-441e-a259-ec7cdb46886a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../scholar/src/main/java/org/sep/scholar/ApplicationStartupListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../scholar/src/main/java/org/sep/scholar/controller/ScholarController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/api/PaymentDataServiceApi.java" beforeDir="false" afterPath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/api/PaymentDataServiceApi.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/controller/PaymentDataController.java" beforeDir="false" afterPath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/controller/PaymentDataController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/service/PaymentDataService.java" beforeDir="false" afterPath="$PROJECT_DIR$/payment-data-service/src/main/java/org/sep/paymentdataservice/service/PaymentDataService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../scholar/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../scholar/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../scholar/src/main/java/org/sep/scholar/ScholarApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/../scholar/src/main/java/org/sep/scholar/ScholarApplication.java" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,6 +28,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="MavenImportPreferences">
     <option name="importingSettings">
       <MavenImportingSettings>
@@ -26,21 +40,28 @@
     </option>
   </component>
   <component name="ProjectId" id="1U49YJhH99fzY2wUEQ3S5npz4ug" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="RequestMappingsPanelOrder0" value="0" />
     <property name="RequestMappingsPanelOrder1" value="1" />
     <property name="RequestMappingsPanelWidth0" value="75" />
     <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../scholar" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="settings.saveactions" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="org.sep.scholar" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -54,7 +75,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.PaymentClientServiceApplication">
+  <component name="RunManager" selected="Spring Boot.ScholarApplication">
     <configuration name="DiscoveryApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
       <module name="discovery" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="org.sep.discovery.DiscoveryApplication" />
@@ -109,11 +130,27 @@
       <option name="presentableId" value="Default" />
       <updated>1574605048009</updated>
       <workItem from="1574605059585" duration="22137000" />
+      <workItem from="1574862412245" duration="1693000" />
+      <workItem from="1574962332322" duration="544000" />
+      <workItem from="1574962943439" duration="9410000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -122,11 +159,6 @@
           <url>file://$PROJECT_DIR$/payment-transaction-service/src/main/java/org/sep/paymenttransactionservice/controller/PaymentTransactionController.java</url>
           <line>26</line>
           <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/payment-client-service/src/main/java/org/sep/paymentclientservice/controller/PaymentClientController.java</url>
-          <line>26</line>
-          <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

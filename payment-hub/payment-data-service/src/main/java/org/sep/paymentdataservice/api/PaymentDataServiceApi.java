@@ -13,12 +13,21 @@ import java.util.Optional;
 @FeignClient("data-service")
 public interface PaymentDataServiceApi {
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/method", produces = MediaType.APPLICATION_JSON_VALUE)
     List<PaymentMethod> getAllPaymentMethods();
 
-    @GetMapping(value = "/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/method/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
     Optional<PaymentMethod> getPaymentMethodByName(@PathVariable String name);
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/method", consumes = MediaType.APPLICATION_JSON_VALUE)
     void addPaymentMethod(@RequestBody PaymentMethod paymentMethod);
+
+    @GetMapping(value = "/client", produces = MediaType.APPLICATION_JSON_VALUE)
+    List<String> getAllPaymentClients();
+
+    @GetMapping(value = "/client/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    Optional<String> getPaymentClientByName(@PathVariable String name);
+
+    @PostMapping(value = "/client", consumes = MediaType.APPLICATION_JSON_VALUE)
+    void addPaymentClient(@RequestBody String paymentClient);
 }

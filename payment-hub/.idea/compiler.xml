@@ -8,10 +8,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="scholar" />
-        <module name="discovery" />
         <module name="payment-data-service" />
         <module name="paypal" />
         <module name="payment-client-service" />
+        <module name="discovery" />
         <module name="payment-transaction-service" />
       </profile>
     </annotationProcessing>

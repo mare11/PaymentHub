@@ -52,14 +52,8 @@
 
         <dependency>
             <groupId>org.sep</groupId>
-            <artifactId>activity-service</artifactId>
+            <artifactId>payment-data-service</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.sep</groupId>
-                    <artifactId>*.*.api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>

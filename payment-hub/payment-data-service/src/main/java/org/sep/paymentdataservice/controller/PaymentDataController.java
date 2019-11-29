@@ -33,4 +33,19 @@ public class PaymentDataController implements PaymentDataServiceApi {
     public void addPaymentMethod(final PaymentMethod paymentMethod) {
         paymentDataService.addPaymentMethod(paymentMethod);
     }
+
+    @Override
+    public List<String> getAllPaymentClients() {
+        return paymentDataService.getPaymentClients();
+    }
+
+    @Override
+    public Optional<String> getPaymentClientByName(final String name) {
+        return paymentDataService.getPaymentClientByName(name);
+    }
+
+    @Override
+    public void addPaymentClient(final String paymentClient) {
+        paymentDataService.addPaymentClient(paymentClient);
+    }
 }
