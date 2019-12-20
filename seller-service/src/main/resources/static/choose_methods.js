@@ -3,19 +3,25 @@ $(document).ready(
 
         event.preventDefault();
 
-        var form = $('#methods_form')[0];
-        var data = new FormData(form);
+        methods = [];
+        $('input.form-check-input:checked').each(function () {
+            methods.push({"id": this.id, "name": this.value});
+        });
+
+        var data = {};
+        data.paymentMethods = methods;
+        data.sellerId = $('#seller_id').val();
+
         console.dir(data);
-        return;
 
         $.ajax({
-            url: '/register',
+            url: '/methods_chosen',
             type: 'post',
             contentType: 'application/json',
-            data: JSON.stringify({"name": $('#name').val(), "issn": $('#issn').val()}),
-            dataType: 'text',
-            success: function (data) {
-                window.location.replace(data.toString().substr(9));
+            data: JSON.stringify(data),
+            dataType: 'json',
+            success: function () {
+                console.log('success');
             }
         });
     })

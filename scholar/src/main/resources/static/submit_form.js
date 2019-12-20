@@ -8,10 +8,11 @@ $(document).ready(
             type: 'post',
             contentType: 'application/json',
             data: JSON.stringify({"name": $('#name').val(), "issn": $('#issn').val()}),
-            dataType: 'text',
-            success: function (data) {
-                console.log(data);
-                // window.location.replace(data.toString().substr(9));
+            dataType: 'json',
+            success: function (response) {
+                if (response && response.redirectionUrl) {
+                    window.location.href = response.redirectionUrl;
+                }
             }
         });
     })

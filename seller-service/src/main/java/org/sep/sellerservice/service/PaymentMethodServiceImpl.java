@@ -7,11 +7,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
-public class PaymentMethodServiceImpl implements PaymentMethodService{
+public class PaymentMethodServiceImpl implements PaymentMethodService {
 
-    private PaymentMethodRepository paymentMethodRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
 
     @Autowired
     public PaymentMethodServiceImpl(PaymentMethodRepository paymentMethodRepository) {
@@ -25,6 +27,9 @@ public class PaymentMethodServiceImpl implements PaymentMethodService{
 
     @Override
     public PaymentMethod save(PaymentMethod paymentMethod) throws DataAccessException {
+        if (Stream.of(paymentMethod, paymentMethod.getName()).anyMatch(Objects::isNull)) {
+            return null;
+        }
         return this.paymentMethodRepository.save(paymentMethod);
     }
 }

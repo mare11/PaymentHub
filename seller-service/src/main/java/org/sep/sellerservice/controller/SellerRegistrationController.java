@@ -1,17 +1,20 @@
 package org.sep.sellerservice.controller;
 
-import lombok.extern.slf4j.Slf4j;
 import org.sep.sellerservice.api.SellerRegistrationApi;
 import org.sep.sellerservice.api.SellerRegistrationRequest;
+import org.sep.sellerservice.api.SellerRegistrationResponse;
+import org.sep.sellerservice.dto.ChosenPaymentMethodsDto;
 import org.sep.sellerservice.dto.SellerDto;
-import org.sep.sellerservice.service.SellerRegistrationService;
-import org.sep.sellerservice.service.SellerRegistrationServiceImpl;
+import org.sep.sellerservice.service.SellerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Slf4j
 public class SellerRegistrationController implements SellerRegistrationApi {
 
     private static final String HTTP_PREFIX = "http://";
@@ -19,16 +22,30 @@ public class SellerRegistrationController implements SellerRegistrationApi {
     private String SERVER_ADDRESS;
     @Value("${server.port}")
     private String SERVER_PORT;
-    private SellerRegistrationService sellerRegistrationService;
+    private final SellerService sellerService;
 
     @Autowired
-    public SellerRegistrationController(SellerRegistrationService sellerRegistrationService) {
-        this.sellerRegistrationService = sellerRegistrationService;
+    public SellerRegistrationController(SellerService sellerService) {
+        this.sellerService = sellerService;
     }
 
     @Override
-    public String registerSeller(SellerRegistrationRequest sellerRegistrationRequest) {
-        SellerDto seller = this.sellerRegistrationService.save(sellerRegistrationRequest);
-        return "redirect:" + HTTP_PREFIX + SERVER_ADDRESS + ":" + SERVER_PORT + "/choose_method?id=" + seller.getId();
+    public ResponseEntity<SellerRegistrationResponse> registerSeller(SellerRegistrationRequest sellerRegistrationRequest) {
+        try {
+            SellerDto seller = this.sellerService.save(sellerRegistrationRequest);
+            SellerRegistrationResponse sellerRegistrationResponse = SellerRegistrationResponse.builder()
+                    .redirectionUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/choose_method?id=" + seller.getId())
+                    .build();
+            return ResponseEntity.ok(sellerRegistrationResponse);
+        } catch (DataAccessException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping(value = "/methods_chosen")
+    public ResponseEntity chooseMethods(@RequestBody ChosenPaymentMethodsDto chosenPaymentMethodsDtos) {
+        SellerDto sellerDto = this.sellerService.addPaymentMethods(chosenPaymentMethodsDtos);
+        //todo call gateway service and send him selected payment methods
+        return ResponseEntity.ok().build();
     }
 }
