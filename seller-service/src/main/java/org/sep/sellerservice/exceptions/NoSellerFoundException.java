@@ -11,4 +11,8 @@ public class NoSellerFoundException extends RuntimeException {
     public NoSellerFoundException(Long id) {
         super("Seller with id " + id + " is not found.");
     }
+
+    public NoSellerFoundException(String issn) {
+        super("Seller with issn number " + issn + " is not found.");
+    }
 }

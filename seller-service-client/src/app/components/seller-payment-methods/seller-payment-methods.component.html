@@ -1,0 +1,16 @@
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="card text-center p-3">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Choose payment methods</h2>
+                <form>
+                    <div class="form-group form-check" *ngFor="let method of paymentMethods">
+                        <input type="checkbox" class="form-check-input" [id]="method.id" [name]="method.name" [(ngModel)]="method.checked">
+                    <label class="form-check-label" [htmlFor]="method.id">{{method.name}}</label>
+                    </div>
+                    <button id="submit_btn" type="submit" class="btn btn-primary mt-2" (click)="confirm()" [disabled]="paymentProcessing">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
+    <title>Test customer payment</title>
+</head>
+<body>
+<div class="container-fluid">
+    <form id="payment_form">
+        <div class="form-group">
+            <label for="item">Item</label>
+            <input type="text" class="form-control" id="item" name="item">
+            <label for="amount">Amount</label>
+            <input type="number" class="form-control" id="amount" name="amount">
+            <label for="price">Price</label>
+            <input type="number" class="form-control" id="price" name="price">
+        </div>
+        <button type="submit" id="submit_payment_btn" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<script type="text/javascript" th:src="@{/webjars/bootstrap/4.0.0-2/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.js}"></script>
+<script type="text/javascript" th:src="@{/submit_form.js}"></script>
+</body>
+</html>

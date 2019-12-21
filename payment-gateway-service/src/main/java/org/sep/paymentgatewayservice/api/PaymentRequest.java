@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentRequest {
+
+    private Long sellerIssn;
     private String item;
     private Integer amount;
     private Double price;

@@ -2,14 +2,15 @@ package org.sep.paymentgatewayservice.api;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient("payment-gateway")
+@FeignClient("payment-gateway-service")
 public interface PaymentGatewayServiceApi {
 
     @PostMapping(value = "/prepare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    PaymentResponse preparePayment(@RequestBody PaymentRequest paymentRequest);
+    ResponseEntity<PaymentResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     PaymentResponse createPayment(@RequestBody PaymentRequest paymentRequest);

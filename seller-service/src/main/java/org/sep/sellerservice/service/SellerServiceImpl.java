@@ -6,29 +6,34 @@ import org.sep.sellerservice.dto.ChosenPaymentMethodsDto;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.exceptions.NoChosenPaymentMethodException;
 import org.sep.sellerservice.exceptions.NoSellerFoundException;
+import org.sep.sellerservice.model.Payment;
+import org.sep.sellerservice.model.PaymentMethod;
 import org.sep.sellerservice.model.Seller;
-import org.sep.sellerservice.repository.SellerRegistrationRepository;
+import org.sep.sellerservice.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
 public class SellerServiceImpl implements SellerService {
 
-    private final SellerRegistrationRepository sellerRegistrationRepository;
+    private final SellerRepository sellerRepository;
     private final ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
-    public SellerServiceImpl(SellerRegistrationRepository sellerRegistrationRepository) {
-        this.sellerRegistrationRepository = sellerRegistrationRepository;
+    public SellerServiceImpl(SellerRepository sellerRepository) {
+        this.sellerRepository = sellerRepository;
     }
 
     @Override
     public Seller findById(Long id) {
-        return this.sellerRegistrationRepository.findById(id).orElse(null);
+        return this.sellerRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -42,7 +47,7 @@ public class SellerServiceImpl implements SellerService {
                 .issn(sellerRegistrationRequest.getIssn())
                 .enabled(false)
                 .build();
-        seller = this.sellerRegistrationRepository.save(seller);
+        seller = this.sellerRepository.save(seller);
         return this.modelMapper.map(seller, SellerDto.class);
     }
 
@@ -56,7 +61,7 @@ public class SellerServiceImpl implements SellerService {
             throw new NoSellerFoundException(seller.getId());
         }
 
-        seller = this.sellerRegistrationRepository.save(seller);
+        seller = this.sellerRepository.save(seller);
         return this.modelMapper.map(seller, SellerDto.class);
     }
 
@@ -84,5 +89,14 @@ public class SellerServiceImpl implements SellerService {
         seller.setEnabled(true);
 
         return this.update(seller);
+    }
+
+    @Override
+    public List<PaymentMethod> getSellerPaymentMethods(Payment payment) {
+        Assert.notNull(payment, "Payment can't be null!.");
+        Assert.notNull(payment.getSeller(), "Seller for payment can't be null.");
+        Seller seller = this.findById(payment.getSeller().getId());
+        if (seller == null) return null;
+        return new ArrayList<>(seller.getPaymentMethods());
     }
 }
