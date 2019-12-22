@@ -6,12 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient("payment-gateway-service/method")
-public interface PaymentGatewayServiceMethodApi {
+import java.net.URI;
+
+@FeignClient("payment-method")
+public interface PaymentMethodApi {
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PaymentMethodResponse> createPayment(@RequestBody PaymentMethodRequest paymentMethodRequest);
+    ResponseEntity<PaymentMethodResponse> createPayment(URI baseUrl, @RequestBody PaymentMethodRequest paymentMethodRequest);
 
     @PostMapping(value = "/complete", consumes = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity completePayment(@RequestBody PaymentCompleteRequest paymentCompleteRequest);
+    ResponseEntity<Void> completePayment(URI baseUrl, @RequestBody PaymentCompleteRequest paymentCompleteRequest);
 }
