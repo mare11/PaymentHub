@@ -9,14 +9,14 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.sep</groupId>
-    <artifactId>bank-service</artifactId>
+    <artifactId>acquirer-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>bank-service</name>
-    <description>Bank payment service for EPS project</description>
+    <name>acquirer-service</name>
+    <description>Acquirer service for payments via payment card</description>
 
     <properties>
         <java.version>13</java.version>
-        <spring-cloud.version>Hoxton.RELEASE</spring-cloud.version>
+        <spring-cloud.version>Hoxton.SR1</spring-cloud.version>
     </properties>
 
     <dependencies>
@@ -25,14 +25,33 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>4.0.0-2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+            <version>3.3.1</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>2.3.5</version>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -51,18 +70,6 @@
                 <exclusion>
                     <groupId>org.junit.vintage</groupId>
                     <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.sep</groupId>
-            <artifactId>payment-gateway-service</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <classifier>method-api</classifier>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -85,6 +92,26 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>api</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <addMavenDescriptor>true</addMavenDescriptor>
+                            </archive>
+                            <descriptors>
+                                <descriptor>src/main/resources/assemblies/api-assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
