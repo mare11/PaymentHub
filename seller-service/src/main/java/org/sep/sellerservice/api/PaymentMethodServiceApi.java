@@ -1,6 +1,5 @@
 package org.sep.sellerservice.api;
 
-import org.sep.sellerservice.model.PaymentMethod;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

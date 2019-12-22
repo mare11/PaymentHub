@@ -2,15 +2,11 @@ package org.sep.sellerservice.controller;
 
 import org.sep.paymentgatewayservice.api.PaymentRequest;
 import org.sep.paymentgatewayservice.api.PaymentResponse;
-import org.sep.sellerservice.api.SellerRegistrationRequest;
-import org.sep.sellerservice.api.SellerRegistrationResponse;
-import org.sep.sellerservice.api.SellerServiceApi;
-import org.sep.sellerservice.dto.ChosenPaymentMethodsDto;
+import org.sep.sellerservice.api.*;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
 import org.sep.sellerservice.dto.PaymentDto;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.model.Payment;
-import org.sep.sellerservice.model.PaymentMethod;
 import org.sep.sellerservice.service.PaymentService;
 import org.sep.sellerservice.service.SellerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,8 +63,8 @@ public class SellerServiceController implements SellerServiceApi {
     }
 
     @PostMapping(value = "/methods_chosen")
-    public ResponseEntity chooseMethods(@RequestBody ChosenPaymentMethodsDto chosenPaymentMethodsDtos) {
-        SellerDto sellerDto = this.sellerService.addPaymentMethods(chosenPaymentMethodsDtos);
+    public ResponseEntity chooseMethods(@RequestBody SellerPaymentMethods sellerPaymentMethods) {
+        SellerDto sellerDto = this.sellerService.addPaymentMethods(sellerPaymentMethods);
         //todo call gateway service and send him selected payment methods
         return ResponseEntity.ok().build();
     }

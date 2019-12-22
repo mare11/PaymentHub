@@ -1,34 +1,39 @@
 package org.sep.sellerservice.service;
 
 import org.modelmapper.ModelMapper;
+import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
+import org.sep.sellerservice.api.PaymentMethod;
+import org.sep.sellerservice.api.SellerPaymentMethods;
 import org.sep.sellerservice.api.SellerRegistrationRequest;
-import org.sep.sellerservice.dto.ChosenPaymentMethodsDto;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.exceptions.NoChosenPaymentMethodException;
 import org.sep.sellerservice.exceptions.NoSellerFoundException;
 import org.sep.sellerservice.model.Payment;
-import org.sep.sellerservice.model.PaymentMethod;
 import org.sep.sellerservice.model.Seller;
+import org.sep.sellerservice.repository.PaymentMethodRepository;
 import org.sep.sellerservice.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class SellerServiceImpl implements SellerService {
 
     private final SellerRepository sellerRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final PaymentGatewayServiceApi paymentGatewayServiceApi;
     private final ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
-    public SellerServiceImpl(SellerRepository sellerRepository) {
+    public SellerServiceImpl(SellerRepository sellerRepository, PaymentMethodRepository paymentMethodRepository, PaymentGatewayServiceApi paymentGatewayServiceApi) {
         this.sellerRepository = sellerRepository;
+        this.paymentMethodRepository = paymentMethodRepository;
+        this.paymentGatewayServiceApi = paymentGatewayServiceApi;
     }
 
     @Override
@@ -37,7 +42,7 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public SellerDto save(SellerRegistrationRequest sellerRegistrationRequest) throws DataAccessException {
+    public SellerDto save(final SellerRegistrationRequest sellerRegistrationRequest) {
         if (Stream.of(sellerRegistrationRequest, sellerRegistrationRequest.getName(), sellerRegistrationRequest.getIssn())
                 .anyMatch(Objects::isNull)) {
             return null;
@@ -52,7 +57,7 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public SellerDto update(Seller seller) throws NoSellerFoundException {
+    public SellerDto update(Seller seller) {
         if (Stream.of(seller, seller.getId()).anyMatch(Objects::isNull)) {
             return null;
         }
@@ -66,25 +71,26 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public SellerDto addPaymentMethods(ChosenPaymentMethodsDto chosenPaymentMethodsDto) throws NoSellerFoundException, NoChosenPaymentMethodException {
-        if (Stream.of(chosenPaymentMethodsDto, chosenPaymentMethodsDto.getSellerId(), chosenPaymentMethodsDto.getPaymentMethods())
+    public SellerDto addPaymentMethods(final SellerPaymentMethods sellerPaymentMethods) {
+        if (Stream.of(sellerPaymentMethods, sellerPaymentMethods.getSellerId(), sellerPaymentMethods.getPaymentMethods())
                 .anyMatch(Objects::isNull)) {
             return null;
         }
 
-        if (chosenPaymentMethodsDto.getPaymentMethods().isEmpty()) {
+        if (sellerPaymentMethods.getPaymentMethods().isEmpty()) {
             throw new NoChosenPaymentMethodException();
         }
 
-        Seller seller = this.findById(chosenPaymentMethodsDto.getSellerId());
+        final Seller seller = this.findById(sellerPaymentMethods.getSellerId());
 
         if (seller == null) {
-            throw new NoSellerFoundException(chosenPaymentMethodsDto.getSellerId());
+            throw new NoSellerFoundException(sellerPaymentMethods.getSellerId());
         }
 
-        chosenPaymentMethodsDto.getPaymentMethods().forEach(method -> {
-            seller.getPaymentMethods().add(method);
-        });
+        sellerPaymentMethods.getPaymentMethods().forEach(method ->
+                seller.getPaymentMethodEntities().add(paymentMethodRepository.getOne(method.getId())));
+
+        //call gateway service and send him selected payment methods
 
         seller.setEnabled(true);
 
@@ -96,7 +102,11 @@ public class SellerServiceImpl implements SellerService {
         Assert.notNull(payment, "Payment can't be null!.");
         Assert.notNull(payment.getSeller(), "Seller for payment can't be null.");
         Seller seller = this.findById(payment.getSeller().getId());
-        if (seller == null) return null;
-        return new ArrayList<>(seller.getPaymentMethods());
+        if (seller == null) {
+            return null;
+        }
+        return seller.getPaymentMethodEntities().stream()
+                .map(method -> modelMapper.map(method, PaymentMethod.class))
+                .collect(Collectors.toList());
     }
 }

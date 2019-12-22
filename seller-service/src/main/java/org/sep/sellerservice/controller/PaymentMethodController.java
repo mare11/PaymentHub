@@ -1,7 +1,7 @@
 package org.sep.sellerservice.controller;
 
+import org.sep.sellerservice.api.PaymentMethod;
 import org.sep.sellerservice.api.PaymentMethodServiceApi;
-import org.sep.sellerservice.model.PaymentMethod;
 import org.sep.sellerservice.service.PaymentMethodService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;

@@ -32,5 +32,5 @@ public class Seller {
     @JoinTable(name = "sellers_payment_methods",
             joinColumns = {@JoinColumn(name = "seller_id")},
             inverseJoinColumns = {@JoinColumn(name = "method_id")})
-    private Set<PaymentMethod> paymentMethods;
+    private Set<PaymentMethodEntity> paymentMethodEntities;
 }

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.sep.sellerservice.model.PaymentMethod;
+import org.sep.sellerservice.api.PaymentMethod;
 
 @Data
 @NoArgsConstructor

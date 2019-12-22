@@ -98,11 +98,6 @@
                             </descriptors>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
                     <execution>
                         <id>method-api</id>
                         <phase>package</phase>
