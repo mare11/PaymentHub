@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PaymentMethodRequest {
     private String orderId;
+    private Long sellerIssn;
     private String priceAmount;
     private String priceCurrency;
     private String title;
