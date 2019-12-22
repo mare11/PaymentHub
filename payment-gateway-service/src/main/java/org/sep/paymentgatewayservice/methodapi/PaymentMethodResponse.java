@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class PaymentMethodResponse {
     private String orderId;
     private String paymentUrl;
+    private CreatePaymentStatus status;
 }

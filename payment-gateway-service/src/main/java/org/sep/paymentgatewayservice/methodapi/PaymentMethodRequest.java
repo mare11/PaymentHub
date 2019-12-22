@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentMethodRequest {
-    private Long sellerIssn;
+    private String sellerIssn;
     private String sellerName;
     private String item;
     private Double price;

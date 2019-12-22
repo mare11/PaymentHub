@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PaymentCompleteRequest {
     private String orderId;
-    private String status;
+    private PaymentStatus status;
 }
