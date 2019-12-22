@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
+    <title>Test seller registration</title>
+</head>
+<body>
+<div class="container-fluid">
+    <form id="seller_register_form">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name">
+            <label for="issn">ISSN</label>
+            <input type="text" class="form-control" id="issn" name="issn">
+        </div>
+        <button type="submit" id="submit_btn" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<script type="text/javascript" th:src="@{/webjars/bootstrap/4.0.0-2/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.js}"></script>
+<script type="text/javascript" th:src="@{/submit_form.js}"></script>
+</body>
+</html>

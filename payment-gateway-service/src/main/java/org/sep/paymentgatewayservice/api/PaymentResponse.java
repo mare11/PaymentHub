@@ -15,5 +15,5 @@ public class PaymentResponse {
     private String method;
     private String token;
     private Boolean outcome;
-    private String redirectUrl;
+    private String redirectionUrl;
 }

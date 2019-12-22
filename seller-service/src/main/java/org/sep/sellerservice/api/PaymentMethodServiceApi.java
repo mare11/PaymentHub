@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient("payment-method-service")
+@FeignClient("seller-service/api/payment_method")
 public interface PaymentMethodServiceApi {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

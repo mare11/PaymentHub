@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
-    <title>Test</title>
+    <title>Test customer payment</title>
 </head>
 <body>
 <div class="container-fluid">
-    <form id="seller_register_form">
+    <form id="payment_form">
         <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" class="form-control" id="name" name="name">
-            <label for="issn">ISSN</label>
-            <input type="text" class="form-control" id="issn" name="issn">
+            <label for="item">Item</label>
+            <input type="text" class="form-control" id="item" name="item">
+            <label for="amount">Amount</label>
+            <input type="number" class="form-control" id="amount" name="amount">
+            <label for="price">Price</label>
+            <input type="number" class="form-control" id="price" name="price">
         </div>
-        <button type="submit" id="submit_btn" class="btn btn-primary">Submit</button>
+        <button type="submit" id="submit_payment_btn" class="btn btn-primary">Submit</button>
     </form>
 </div>
 
