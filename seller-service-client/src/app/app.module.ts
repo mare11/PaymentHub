@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule, RoutingComponents } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { PaymentComponent } from './components/payment/payment.component';
 
 @NgModule({
   declarations: [

@@ -1,4 +1,4 @@
-package org.sep.sellerservice.api;
+package org.sep.paymentgatewayservice.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

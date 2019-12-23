@@ -2,9 +2,9 @@ package org.sep.sellerservice.service;
 
 import org.modelmapper.ModelMapper;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
+import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
 import org.sep.sellerservice.api.PaymentMethod;
 import org.sep.sellerservice.api.SellerPaymentMethods;
-import org.sep.sellerservice.api.SellerRegistrationRequest;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.exceptions.NoChosenPaymentMethodException;
 import org.sep.sellerservice.exceptions.NoSellerFoundException;
@@ -88,7 +88,7 @@ public class SellerServiceImpl implements SellerService {
         }
 
         sellerPaymentMethods.getPaymentMethods().forEach(method ->
-                seller.getPaymentMethodEntities().add(paymentMethodRepository.getOne(method.getId())));
+                seller.getPaymentMethodEntities().add(this.paymentMethodRepository.getOne(method.getId())));
 
         //call gateway service and send him selected payment methods
 
@@ -106,7 +106,7 @@ public class SellerServiceImpl implements SellerService {
             return null;
         }
         return seller.getPaymentMethodEntities().stream()
-                .map(method -> modelMapper.map(method, PaymentMethod.class))
+                .map(method -> this.modelMapper.map(method, PaymentMethod.class))
                 .collect(Collectors.toList());
     }
 }

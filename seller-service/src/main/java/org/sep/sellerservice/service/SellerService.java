@@ -1,8 +1,8 @@
 package org.sep.sellerservice.service;
 
+import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
 import org.sep.sellerservice.api.PaymentMethod;
 import org.sep.sellerservice.api.SellerPaymentMethods;
-import org.sep.sellerservice.api.SellerRegistrationRequest;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.model.Seller;
