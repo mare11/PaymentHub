@@ -2,6 +2,8 @@ package org.sep.sellerservice.api;
 
 import org.sep.paymentgatewayservice.api.PaymentRequest;
 import org.sep.paymentgatewayservice.api.PaymentResponse;
+import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
+import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
