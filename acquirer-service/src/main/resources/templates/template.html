@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
+    <title>Test</title>
+</head>
+<body>
+<div class="container col-4">
+    Amount:
+    <label class="form-check-label card-text" th:text="${transaction.amount}"></label>
+    <br/>
+    Timestamp:
+    <label class="form-check-label card-text" th:text="${transaction.timestamp}"></label>
+    <form id="seller_register_form">
+        <div class="form-group">
+            <label for="pan">Payment Card Number</label>
+            <input type="number" class="form-control" id="pan" name="pan">
+            <label for="ccv">Security Code</label>
+            <input type="number" class="form-control" id="ccv" name="ccv">
+            <label for="date">Expiration Date</label>
+            <input type="date" class="form-control" id="date" name="date">
+            <label for="name">Cardholder Name</label>
+            <input type="text" class="form-control" id="name" name="name">
+            <input hidden th:value="${transaction.id}" id="id">
+        </div>
+        <button type="submit" id="submit_btn" class="btn btn-primary btn-block">Submit</button>
+    </form>
+</div>
+
+<script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.js}"></script>
+<script type="text/javascript" th:src="@{/submit_form.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/bootstrap/4.0.0-2/js/bootstrap.min.js}"></script>
+</body>
+</html>
