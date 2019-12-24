@@ -1,5 +1,7 @@
 package org.sep.paymentgatewayservice;
 
+import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
+import org.sep.sellerservice.api.PaymentMethodServiceApi;
 import org.sep.sellerservice.api.SellerServiceApi;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +10,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableEurekaClient
-@EnableFeignClients(clients = {SellerServiceApi.class})
+@EnableFeignClients(clients = {SellerServiceApi.class, PaymentMethodServiceApi.class, PaymentMethodApi.class})
 public class PaymentGatewayServiceApplication {
 
     public static void main(final String[] args) {

@@ -47,4 +47,7 @@ public class PaymentTransaction {
 
     @Column
     private String currency;
+
+    @Column(nullable = false)
+    private String returnUrl;
 }

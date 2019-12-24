@@ -1,4 +1,4 @@
-package org.sep.paymentgatewayservice.methodapi;
+package org.sep.paymentgatewayservice.payment.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentMethodRequest {
+public class PaymentRequest {
     private String sellerIssn;
     private String sellerName;
     private String item;
     private Double price;
     private String priceCurrency;
     private String description;
-    private String cancelUrl;
-    private String successUrl;
+    private String method;
+    private String returnUrl;
 }

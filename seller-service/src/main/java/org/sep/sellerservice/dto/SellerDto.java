@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,6 +12,6 @@ import javax.persistence.Column;
 public class SellerDto {
     private Long id;
     private String name;
-    private Long issn;
+    private String issn;
     private Boolean enabled;
 }

@@ -1,10 +1,13 @@
 package org.sep.sellerservice.controller;
 
-import org.sep.paymentgatewayservice.api.PaymentRequest;
-import org.sep.paymentgatewayservice.api.PaymentResponse;
-import org.sep.sellerservice.api.*;
+import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
+import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
+import org.sep.sellerservice.api.PaymentMethod;
+import org.sep.sellerservice.api.SellerPaymentMethods;
+import org.sep.sellerservice.api.SellerServiceApi;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
-import org.sep.sellerservice.dto.PaymentDto;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.service.PaymentService;
@@ -51,10 +54,9 @@ public class SellerServiceController implements SellerServiceApi {
     @Override
     public ResponseEntity<PaymentResponse> preparePayment(PaymentRequest paymentRequest) {
         try {
-            PaymentDto paymentDto = this.paymentService.save(paymentRequest);
+            Long paymentId = this.paymentService.save(paymentRequest);
             PaymentResponse paymentResponse = PaymentResponse.builder()
-                    .paymentId(paymentDto.getId().toString())
-                    .redirectionUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/payment/" + paymentDto.getId())
+                    .paymentUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/payment/" + paymentId)
                     .build();
             return ResponseEntity.ok(paymentResponse);
         } catch (DataAccessException e) {

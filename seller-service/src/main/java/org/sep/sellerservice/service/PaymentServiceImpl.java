@@ -1,11 +1,9 @@
 package org.sep.sellerservice.service;
 
-import org.modelmapper.ModelMapper;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
-import org.sep.paymentgatewayservice.api.PaymentRequest;
-import org.sep.paymentgatewayservice.api.PaymentResponse;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
-import org.sep.sellerservice.dto.PaymentDto;
 import org.sep.sellerservice.exceptions.NoSellerFoundException;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.model.Seller;
@@ -23,7 +21,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final SellerRepository sellerRepository;
     private final PaymentGatewayServiceApi paymentGatewayServiceApi;
-    private final ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, SellerRepository sellerRepository, PaymentGatewayServiceApi paymentGatewayServiceApi) {
@@ -38,29 +35,30 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentDto save(PaymentRequest paymentRequest) throws NoSellerFoundException {
+    public Long save(PaymentRequest paymentRequest) throws NoSellerFoundException {
         Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
-                Stream.of(paymentRequest.getItem(),
-                        paymentRequest.getAmount(),
-                        paymentRequest.getPrice(),
-                        paymentRequest.getSellerIssn())
+                Stream.of(paymentRequest.getPrice(),
+                        paymentRequest.getSellerIssn(),
+                        paymentRequest.getReturnUrl())
                         .toArray(),
                 "One or more fields are not specified.");
 
         Seller seller = this.sellerRepository.findByIssn(paymentRequest.getSellerIssn());
 
         if (seller == null || !seller.getEnabled())
-            throw new NoSellerFoundException(paymentRequest.getSellerIssn().toString());
+            throw new NoSellerFoundException(paymentRequest.getSellerIssn());
 
         Payment payment = Payment.builder()
                 .seller(seller)
                 .item(paymentRequest.getItem())
-                .amount(paymentRequest.getAmount())
+                .description(paymentRequest.getDescription())
                 .price(paymentRequest.getPrice())
+                .priceCurrency(paymentRequest.getPriceCurrency())
+                .returnUrl(paymentRequest.getReturnUrl())
                 .build();
         payment = this.paymentRepository.save(payment);
-        return this.modelMapper.map(payment, PaymentDto.class);
+        return payment.getId();
     }
 
     @Override
@@ -68,21 +66,25 @@ public class PaymentServiceImpl implements PaymentService {
         Assert.notNull(customerPaymentDto, "Customer payment can't be null!");
         Assert.noNullElements(
                 Stream.of(customerPaymentDto.getPaymentId(),
-                        customerPaymentDto.getPaymentMethod(),
-                        customerPaymentDto.getPaymentMethod().getId(),
-                        customerPaymentDto.getPaymentMethod().getName())
+                        customerPaymentDto.getPaymentMethod())
                         .toArray(),
                 "One or more fields are not specified.");
-
+        Assert.noNullElements(
+                Stream.of(customerPaymentDto.getPaymentMethod().getId(),
+                        customerPaymentDto.getPaymentMethod().getName())
+                        .toArray(),
+                "One or more fields in payment method are not specified.");
         Payment payment = this.findById(customerPaymentDto.getPaymentId());
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .item(payment.getItem())
-                .amount(payment.getAmount())
+                .description(payment.getDescription())
                 .price(payment.getPrice())
                 .method(customerPaymentDto.getPaymentMethod().getName())
                 .sellerIssn(payment.getSeller().getIssn())
+                .sellerName(payment.getSeller().getName())
+                .returnUrl(payment.getReturnUrl())
                 .build();
-        return this.paymentGatewayServiceApi.createPayment(paymentRequest);
+        return this.paymentGatewayServiceApi.createPayment(paymentRequest).getBody();
     }
 }

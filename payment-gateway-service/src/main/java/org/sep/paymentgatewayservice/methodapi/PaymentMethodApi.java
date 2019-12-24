@@ -1,5 +1,7 @@
 package org.sep.paymentgatewayservice.methodapi;
 
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +14,8 @@ import java.net.URI;
 public interface PaymentMethodApi {
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PaymentMethodResponse> createPayment(URI baseUrl, @RequestBody PaymentMethodRequest paymentMethodRequest);
+    ResponseEntity<PaymentResponse> createPayment(URI baseUrl, @RequestBody PaymentRequest paymentRequest);
 
     @PostMapping(value = "/complete", consumes = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Void> completePayment(URI baseUrl, @RequestBody PaymentCompleteRequest paymentCompleteRequest);
+    ResponseEntity<String> completePayment(@RequestBody PaymentCompleteRequest paymentCompleteRequest);
 }

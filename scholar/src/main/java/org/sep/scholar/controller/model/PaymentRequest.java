@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentRequest {
-
-    private Long sellerIssn;
+    private String sellerIssn;
+    private String sellerName;
     private String item;
-    private Integer amount;
     private Double price;
+    private String priceCurrency;
+    private String description;
     private String method;
-    private String token;
     private String returnUrl;
 }

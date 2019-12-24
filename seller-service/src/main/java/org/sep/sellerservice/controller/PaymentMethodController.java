@@ -29,9 +29,10 @@ public class PaymentMethodController implements PaymentMethodServiceApi {
     }
 
     @Override
-    public ResponseEntity<PaymentMethod> addPaymentMethod(final PaymentMethod paymentMethod) {
+    public ResponseEntity<Void> addPaymentMethod(final PaymentMethod paymentMethod) {
         try {
-            return new ResponseEntity<>(this.paymentDataService.save(paymentMethod), HttpStatus.OK);
+            this.paymentDataService.save(paymentMethod);
+            return ResponseEntity.ok().build();
         } catch (DataAccessException e) {
             return ResponseEntity.badRequest().build();
         }

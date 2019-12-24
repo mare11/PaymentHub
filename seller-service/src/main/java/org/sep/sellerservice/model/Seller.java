@@ -23,7 +23,7 @@ public class Seller {
     private String name;
 
     @Column(unique = true, nullable = false)
-    private Long issn;
+    private String issn;
 
     @Column
     private Boolean enabled;

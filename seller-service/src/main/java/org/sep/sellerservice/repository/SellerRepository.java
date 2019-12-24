@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SellerRepository extends JpaRepository<Seller, Long> {
-    Seller findByIssn(Long issn);
+    Seller findByIssn(String issn);
 }

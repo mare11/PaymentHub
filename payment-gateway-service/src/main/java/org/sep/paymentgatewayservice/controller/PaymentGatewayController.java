@@ -1,15 +1,17 @@
 package org.sep.paymentgatewayservice.controller;
 
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
-import org.sep.paymentgatewayservice.api.PaymentRequest;
-import org.sep.paymentgatewayservice.api.PaymentResponse;
+import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
+import org.sep.paymentgatewayservice.methodapi.PaymentMethodRegistrationApi;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paymentgatewayservice.service.PaymentGatewayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class PaymentGatewayController implements PaymentGatewayServiceApi {
+public class PaymentGatewayController implements PaymentGatewayServiceApi, PaymentMethodRegistrationApi {
 
     private final PaymentGatewayService paymentGatewayService;
 
@@ -24,12 +26,13 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi {
     }
 
     @Override
-    public PaymentResponse createPayment(PaymentRequest paymentRequest) {
-        return this.paymentGatewayService.createPayment(paymentRequest);
+    public ResponseEntity<PaymentResponse> createPayment(PaymentRequest paymentRequest) {
+        return ResponseEntity.ok(this.paymentGatewayService.createPayment(paymentRequest));
     }
 
     @Override
-    public PaymentResponse executePayment(PaymentResponse paymentResponse) {
-        return this.paymentGatewayService.executePayment(paymentResponse);
+    public ResponseEntity<Void> registerPaymentMethod(PaymentMethodData paymentMethodData) {
+        this.paymentGatewayService.registerPaymentMethod(paymentMethodData);
+        return ResponseEntity.ok().build();
     }
 }

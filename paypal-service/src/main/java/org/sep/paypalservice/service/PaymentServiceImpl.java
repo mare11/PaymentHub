@@ -6,7 +6,11 @@ import com.paypal.http.HttpRequest;
 import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import lombok.extern.slf4j.Slf4j;
-import org.sep.paymentgatewayservice.methodapi.*;
+import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
+import org.sep.paymentgatewayservice.methodapi.PaymentStatus;
+import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paypalservice.enums.TransactionStatus;
 import org.sep.paypalservice.exceptions.NoMerchantFoundException;
 import org.sep.paypalservice.exceptions.NoOrderFoundException;
@@ -16,6 +20,7 @@ import org.sep.paypalservice.model.PaymentTransaction;
 import org.sep.paypalservice.repository.MerchantPaymentDetailsRepository;
 import org.sep.paypalservice.repository.PaymentTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,8 +41,12 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String ITEM_CATEGORY = "DIGITAL_GOODS";
     private static final String SERBIAN_LOCALE = "en-RS";
     private static final String APPROVE_REL = "approve";
-    private static final String CAPTURE_REL = "capture";
     private static final String PREFER_HEADER = "return=representation";
+    private static final String HTTP_PREFIX = "http://";
+    @Value("${server.address}")
+    private String SERVER_ADDRESS;
+    @Value("${server.port}")
+    private String SERVER_PORT;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
@@ -49,19 +58,18 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentMethodResponse createPayment(PaymentMethodRequest paymentMethodRequest) throws NoMerchantFoundException, PaymentCouldNotBeCreatedException {
-        Assert.notNull(paymentMethodRequest, "Payment request can't be null!");
+    public PaymentResponse createPayment(PaymentRequest paymentRequest) throws NoMerchantFoundException, PaymentCouldNotBeCreatedException {
+        Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
-                Stream.of(paymentMethodRequest.getSellerIssn(),
-                        paymentMethodRequest.getPrice(),
-                        paymentMethodRequest.getSuccessUrl(),
-                        paymentMethodRequest.getCancelUrl())
+                Stream.of(paymentRequest.getSellerIssn(),
+                        paymentRequest.getPrice(),
+                        paymentRequest.getReturnUrl())
                         .toArray(),
                 "One or more fields are not specified.");
 
-        MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentMethodRequest.getSellerIssn());
+        MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentRequest.getSellerIssn());
 
-        OrdersCreateRequest request = this.createOrderRequest(paymentMethodRequest);
+        OrdersCreateRequest request = this.createOrderRequest(paymentRequest);
         log.info("Request is created...");
 
         Order order = this.sendRequest(request, merchantPaymentDetails);
@@ -73,27 +81,28 @@ public class PaymentServiceImpl implements PaymentService {
                 .orderId(order.id())
                 .status(TransactionStatus.valueOf(order.status()))
                 .createdAt(LocalDateTime.parse(order.createTime(), DATE_TIME_FORMATTER))
-                .merchantId(paymentMethodRequest.getSellerIssn())
+                .merchantId(paymentRequest.getSellerIssn())
                 .item(order.purchaseUnits().get(0).items().get(0).name())
                 .value(Double.valueOf(order.purchaseUnits().get(0).amountWithBreakdown().value()))
                 .currency(order.purchaseUnits().get(0).amountWithBreakdown().currencyCode())
+                .returnUrl(paymentRequest.getReturnUrl())
                 .build();
 
         this.paymentTransactionRepository.save(paymentTransaction);
         log.info("Payment transaction is saved...");
 
-        return PaymentMethodResponse.builder()
-                .paymentUrl(approveLink != null ? approveLink.href() : null)
+        return PaymentResponse.builder()
+                .paymentUrl(approveLink != null ? approveLink.href() : paymentRequest.getReturnUrl())
                 .orderId(order.id())
                 .status(order.status().equals(CreatePaymentStatus.CREATED.name()) ? CreatePaymentStatus.CREATED : CreatePaymentStatus.ERROR)
                 .build();
     }
 
-    private OrdersCreateRequest createOrderRequest(PaymentMethodRequest paymentMethodRequest) {
+    private OrdersCreateRequest createOrderRequest(PaymentRequest paymentRequest) {
 
         Money money = new Money()
-                .currencyCode(paymentMethodRequest.getPriceCurrency() == null ? DEFAULT_CURRENCY : paymentMethodRequest.getPriceCurrency())
-                .value(String.format("%.2f", paymentMethodRequest.getPrice()));
+                .currencyCode(paymentRequest.getPriceCurrency() == null ? DEFAULT_CURRENCY : paymentRequest.getPriceCurrency())
+                .value(String.format("%.2f", paymentRequest.getPrice()));
 
         AmountBreakdown amountBreakdown = new AmountBreakdown().itemTotal(money);
 
@@ -103,9 +112,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .amountBreakdown(amountBreakdown);
 
         Item item = new Item()
-                .name(paymentMethodRequest.getItem() == null ? "" : paymentMethodRequest.getItem())
+                .name(paymentRequest.getItem() == null ? "" : paymentRequest.getItem())
                 .category(ITEM_CATEGORY)
-                .description(paymentMethodRequest.getDescription() == null ? "" : paymentMethodRequest.getDescription())
+                .description(paymentRequest.getDescription() == null ? "" : paymentRequest.getDescription())
                 .quantity("1")
                 .unitAmount(money);
 
@@ -120,10 +129,10 @@ public class PaymentServiceImpl implements PaymentService {
         purchaseUnitRequests.add(purchaseUnitRequest);
 
         ApplicationContext applicationContext = new ApplicationContext()
-                .brandName(paymentMethodRequest.getSellerName() == null ? "" : paymentMethodRequest.getSellerName())
+                .brandName(paymentRequest.getSellerName() == null ? "" : paymentRequest.getSellerName())
                 .locale(SERBIAN_LOCALE)
-                .returnUrl(paymentMethodRequest.getSuccessUrl())
-                .cancelUrl(paymentMethodRequest.getCancelUrl());
+                .returnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment")
+                .cancelUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment");
 
         OrderRequest orderRequest = new OrderRequest()
                 .checkoutPaymentIntent(INTENT)
@@ -137,7 +146,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void completePayment(PaymentCompleteRequest paymentCompleteRequest) throws NoOrderFoundException {
+    public String completePayment(PaymentCompleteRequest paymentCompleteRequest) throws NoOrderFoundException {
         Assert.notNull(paymentCompleteRequest, "Payment complete request can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentCompleteRequest.getOrderId(),
@@ -149,6 +158,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (paymentTransaction == null) throw new NoOrderFoundException(paymentCompleteRequest.getOrderId());
         log.info("Transaction is retrieved from DB...");
+
+        if (paymentTransaction.getStatus() != TransactionStatus.CREATED) return paymentTransaction.getReturnUrl();
 
         if (paymentCompleteRequest.getStatus() == PaymentStatus.SUCCESS) {
 
@@ -167,8 +178,10 @@ public class PaymentServiceImpl implements PaymentService {
             paymentTransaction.setUpdatedAt(LocalDateTime.parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER));
         }
 
-        this.update(paymentTransaction);
+        paymentTransaction = this.update(paymentTransaction);
         log.info("Transaction is updated...");
+
+        return paymentTransaction.getReturnUrl();
     }
 
     @Override

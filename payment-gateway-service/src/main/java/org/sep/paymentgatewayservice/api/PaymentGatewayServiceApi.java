@@ -1,5 +1,7 @@
 package org.sep.paymentgatewayservice.api;
 
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +15,5 @@ public interface PaymentGatewayServiceApi {
     ResponseEntity<PaymentResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    PaymentResponse createPayment(@RequestBody PaymentRequest paymentRequest);
-
-    @PostMapping(value = "/execute", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    PaymentResponse executePayment(@RequestBody PaymentResponse paymentResponse);
+    ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest paymentRequest);
 }

@@ -16,5 +16,5 @@ public interface PaymentMethodServiceApi {
     ResponseEntity<List<PaymentMethod>> getAllPaymentMethods();
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PaymentMethod> addPaymentMethod(@RequestBody PaymentMethod paymentMethod);
+    ResponseEntity<Void> addPaymentMethod(@RequestBody PaymentMethod paymentMethod);
 }

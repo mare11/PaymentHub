@@ -2,8 +2,8 @@ package org.sep.paypalservice.controller;
 
 import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodRequest;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodResponse;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paypalservice.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +22,13 @@ public class PaymentController implements PaymentMethodApi {
     }
 
     @Override
-    public ResponseEntity<PaymentMethodResponse> createPayment(URI baseUrl, PaymentMethodRequest paymentMethodRequest) {
-        PaymentMethodResponse paymentMethodResponse = this.paymentService.createPayment(paymentMethodRequest);
+    public ResponseEntity<PaymentResponse> createPayment(URI baseUrl, PaymentRequest paymentRequest) {
+        PaymentResponse paymentMethodResponse = this.paymentService.createPayment(paymentRequest);
         return ResponseEntity.ok(paymentMethodResponse);
     }
 
     @Override
-    public ResponseEntity<Void> completePayment(URI baseUrl, PaymentCompleteRequest paymentCompleteRequest) {
-        this.paymentService.completePayment(paymentCompleteRequest);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> completePayment(PaymentCompleteRequest paymentCompleteRequest) {
+        return ResponseEntity.ok(this.paymentService.completePayment(paymentCompleteRequest));
     }
 }

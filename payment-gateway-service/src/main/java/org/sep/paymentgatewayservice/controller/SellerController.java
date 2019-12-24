@@ -1,7 +1,7 @@
 package org.sep.paymentgatewayservice.controller;
 
-import org.sep.sellerservice.api.SellerRegistrationRequest;
-import org.sep.sellerservice.api.SellerRegistrationResponse;
+import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
+import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
 import org.sep.sellerservice.api.SellerServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

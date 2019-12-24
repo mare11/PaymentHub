@@ -1,4 +1,4 @@
-package org.sep.paymentgatewayservice.methodapi;
+package org.sep.paymentgatewayservice.payment.entity;
 
 public enum CreatePaymentStatus {
     CREATED, ERROR

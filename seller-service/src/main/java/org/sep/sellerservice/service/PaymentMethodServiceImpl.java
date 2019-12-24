@@ -6,11 +6,10 @@ import org.sep.sellerservice.model.PaymentMethodEntity;
 import org.sep.sellerservice.repository.PaymentMethodRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class PaymentMethodServiceImpl implements PaymentMethodService {
@@ -21,23 +20,25 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     @Autowired
     public PaymentMethodServiceImpl(final PaymentMethodRepository paymentMethodRepository) {
         this.paymentMethodRepository = paymentMethodRepository;
-        modelMapper = new ModelMapper();
+        this.modelMapper = new ModelMapper();
     }
 
     @Override
     public List<PaymentMethod> findAll() {
         return this.paymentMethodRepository.findAll()
                 .stream()
-                .map(method -> modelMapper.map(method, PaymentMethod.class))
+                .map(method -> this.modelMapper.map(method, PaymentMethod.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public PaymentMethod save(final PaymentMethod paymentMethod) {
-        if (Stream.of(paymentMethod, paymentMethod.getName()).anyMatch(Objects::isNull)) {
-            return null;
-        }
-        PaymentMethodEntity paymentMethodEntity = this.paymentMethodRepository.save(modelMapper.map(paymentMethod, PaymentMethodEntity.class));
-        return modelMapper.map(paymentMethodEntity, PaymentMethod.class);
+        Assert.notNull(paymentMethod, "Payment method object can't be null!");
+        Assert.notNull(paymentMethod.getName(), "Payment method name can't be null!");
+
+        if (this.paymentMethodRepository.findByName(paymentMethod.getName()) != null) return null;
+
+        PaymentMethodEntity paymentMethodEntity = this.paymentMethodRepository.save(this.modelMapper.map(paymentMethod, PaymentMethodEntity.class));
+        return this.modelMapper.map(paymentMethodEntity, PaymentMethod.class);
     }
 }

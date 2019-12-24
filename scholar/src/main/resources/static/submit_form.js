@@ -10,8 +10,8 @@ $(document).ready(
             data: JSON.stringify({"name": $('#name').val(), "issn": $('#issn').val()}),
             dataType: 'json',
             success: function (response) {
-                if (response && response.redirectionUrl) {
-                    window.location.href = response.redirectionUrl;
+                if (response && response.paymentUrl) {
+                    window.location.href = response.paymentUrl;
                 }
             }
         });
@@ -20,16 +20,20 @@ $(document).ready(
     $('#submit_payment_btn').click(function (event) {
 
         event.preventDefault();
-        
+
         $.ajax({
             url: '/prepare',
             type: 'post',
             contentType: 'application/json',
-            data: JSON.stringify({"item": $('#item').val(), "amount": $('#amount').val(), "price": $('#price').val()}),
+            data: JSON.stringify({
+                "item": $('#item').val(),
+                "description": $('#description').val(),
+                "price": $('#price').val()
+            }),
             dataType: 'json',
             success: function (response) {
-                if (response && response.redirectionUrl) {
-                    window.location.href = response.redirectionUrl;
+                if (response && response.paymentUrl) {
+                    window.location.href = response.paymentUrl;
                 }
             }
         });

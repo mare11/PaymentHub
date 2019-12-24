@@ -1,4 +1,4 @@
-package org.sep.paymentgatewayservice.methodapi;
+package org.sep.paymentgatewayservice.payment.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentMethodResponse {
+public class PaymentResponse {
     private String orderId;
     private String paymentUrl;
     private CreatePaymentStatus status;

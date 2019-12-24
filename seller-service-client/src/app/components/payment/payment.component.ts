@@ -30,12 +30,15 @@ export class PaymentComponent implements OnInit {
       const payment = { paymentId: this.paymentId, paymentMethod: this.selectedMethod };
       this.paymentProcessing = true;
       this.paymentService.payment(payment).subscribe(
-        () => {
-          alert('Success');
-          this.paymentProcessing = false;
+        (paymentResponse: any) => {
+          if (paymentResponse.status === 'ERROR') {
+            alert('Error while creating your payment! Please, try again later.');
+          }
+
+          window.location.href = paymentResponse.paymentUrl;
         },
         () => {
-          alert('Failure');
+          alert('Failure!');
           this.paymentProcessing = false;
         }
       );

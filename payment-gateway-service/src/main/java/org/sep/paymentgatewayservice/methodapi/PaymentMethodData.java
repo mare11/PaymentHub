@@ -1,4 +1,4 @@
-package org.sep.paymentgatewayservice.api;
+package org.sep.paymentgatewayservice.methodapi;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerRegistrationRequest {
+public class PaymentMethodData {
 
     private String name;
-    private String issn;
+    private String serviceName;
+    private Integer port;
 }
