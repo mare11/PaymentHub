@@ -13,6 +13,7 @@ import java.util.List;
 @Builder
 public class SellerPaymentMethods {
 
-    private Long sellerId;
+    private String sellerIssn;
+    private String returnUrl;
     private List<PaymentMethod> paymentMethods;
 }

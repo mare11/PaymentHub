@@ -9,7 +9,7 @@ public interface PaymentService {
 
     Payment findById(Long id);
 
-    Long save(PaymentRequest paymentRequest);
+    Long preparePayment(PaymentRequest paymentRequest);
 
     PaymentResponse proceedPayment(CustomerPaymentDto customerPaymentDto);
 }

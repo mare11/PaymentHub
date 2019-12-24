@@ -7,15 +7,15 @@
     <title>Payment completed</title>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row justify-content-center mt-5">
-        <h1 class="display-3" th:text="${message}"></h1>
-    </div>
-    <div class="row justify-content-center mt-5">
-        <a class="btn btn-primary" th:href="${returnUrl}" role="button">Back to merchant site</a>
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <h1 class="display-4 font-italic" th:text="${message}"></h1>
+        <hr class="my-4">
+        <a class="btn btn-danger lead" th:href="${returnUrl}" role="button">
+            🢠 Back to merchant site
+        </a>
     </div>
 </div>
-
 <script type="text/javascript" th:src="@{/webjars/bootstrap/4.0.0-2/js/bootstrap.min.js}"></script>
 </body>
 </html>

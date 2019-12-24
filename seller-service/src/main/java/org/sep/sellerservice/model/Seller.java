@@ -28,6 +28,9 @@ public class Seller {
     @Column
     private Boolean enabled;
 
+    @Column(nullable = false)
+    private String returnUrl;
+
     @ManyToMany
     @JoinTable(name = "sellers_payment_methods",
             joinColumns = {@JoinColumn(name = "seller_id")},

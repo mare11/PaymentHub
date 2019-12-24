@@ -5,16 +5,16 @@ import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.sellerservice.api.PaymentMethod;
-import org.sep.sellerservice.api.SellerPaymentMethods;
 import org.sep.sellerservice.api.SellerServiceApi;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
+import org.sep.sellerservice.dto.RedirectionDto;
 import org.sep.sellerservice.dto.SellerDto;
+import org.sep.sellerservice.dto.SellerPaymentMethodsDto;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.service.PaymentService;
 import org.sep.sellerservice.service.SellerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,35 +40,31 @@ public class SellerServiceController implements SellerServiceApi {
 
     @Override
     public ResponseEntity<SellerRegistrationResponse> registerSeller(SellerRegistrationRequest sellerRegistrationRequest) {
-        try {
-            SellerDto seller = this.sellerService.save(sellerRegistrationRequest);
-            SellerRegistrationResponse sellerRegistrationResponse = SellerRegistrationResponse.builder()
-                    .redirectionUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/seller/" + seller.getId())
-                    .build();
-            return ResponseEntity.ok(sellerRegistrationResponse);
-        } catch (DataAccessException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        SellerDto seller = this.sellerService.save(sellerRegistrationRequest);
+        SellerRegistrationResponse sellerRegistrationResponse = SellerRegistrationResponse.builder()
+                .redirectionUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/seller/" + seller.getId())
+                .build();
+        return ResponseEntity.ok(sellerRegistrationResponse);
     }
 
     @Override
     public ResponseEntity<PaymentResponse> preparePayment(PaymentRequest paymentRequest) {
-        try {
-            Long paymentId = this.paymentService.save(paymentRequest);
-            PaymentResponse paymentResponse = PaymentResponse.builder()
-                    .paymentUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/payment/" + paymentId)
-                    .build();
-            return ResponseEntity.ok(paymentResponse);
-        } catch (DataAccessException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Long paymentId = this.paymentService.preparePayment(paymentRequest);
+        PaymentResponse paymentResponse = PaymentResponse.builder()
+                .paymentUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/payment/" + paymentId)
+                .build();
+        return ResponseEntity.ok(paymentResponse);
+    }
+
+    @Override
+    public ResponseEntity<Void> enableSeller(String sellerIssn) {
+        this.sellerService.enableSeller(sellerIssn);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/methods_chosen")
-    public ResponseEntity chooseMethods(@RequestBody SellerPaymentMethods sellerPaymentMethods) {
-        SellerDto sellerDto = this.sellerService.addPaymentMethods(sellerPaymentMethods);
-        //todo call gateway service and send him selected payment methods
-        return ResponseEntity.ok().build();
+    public ResponseEntity<RedirectionDto> chooseMethods(@RequestBody SellerPaymentMethodsDto sellerPaymentMethodsDto) {
+        return ResponseEntity.ok(RedirectionDto.builder().redirectionUrl(this.sellerService.addPaymentMethods(sellerPaymentMethodsDto)).build());
     }
 
     @PostMapping(value = "/payment")

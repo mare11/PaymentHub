@@ -10,8 +10,8 @@ $(document).ready(
             data: JSON.stringify({"name": $('#name').val(), "issn": $('#issn').val()}),
             dataType: 'json',
             success: function (response) {
-                if (response && response.paymentUrl) {
-                    window.location.href = response.paymentUrl;
+                if (response && response.redirectionUrl) {
+                    window.location.href = response.redirectionUrl;
                 }
             }
         });

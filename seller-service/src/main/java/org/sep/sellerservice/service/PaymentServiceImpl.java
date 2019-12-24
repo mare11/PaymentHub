@@ -4,7 +4,9 @@ import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
+import org.sep.sellerservice.exceptions.NoPaymentFoundException;
 import org.sep.sellerservice.exceptions.NoSellerFoundException;
+import org.sep.sellerservice.exceptions.SellerIsNotEnabledException;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.model.Seller;
 import org.sep.sellerservice.repository.PaymentRepository;
@@ -35,7 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Long save(PaymentRequest paymentRequest) throws NoSellerFoundException {
+    public Long preparePayment(PaymentRequest paymentRequest) throws NoSellerFoundException {
         Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentRequest.getPrice(),
@@ -62,7 +64,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponse proceedPayment(CustomerPaymentDto customerPaymentDto) {
+    public PaymentResponse proceedPayment(CustomerPaymentDto customerPaymentDto) throws SellerIsNotEnabledException, NoPaymentFoundException {
         Assert.notNull(customerPaymentDto, "Customer payment can't be null!");
         Assert.noNullElements(
                 Stream.of(customerPaymentDto.getPaymentId(),
@@ -75,6 +77,10 @@ public class PaymentServiceImpl implements PaymentService {
                         .toArray(),
                 "One or more fields in payment method are not specified.");
         Payment payment = this.findById(customerPaymentDto.getPaymentId());
+
+        if (payment == null) throw new NoPaymentFoundException(customerPaymentDto.getPaymentId());
+
+        if (!payment.getSeller().getEnabled()) throw new SellerIsNotEnabledException(payment.getSeller().getIssn());
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .item(payment.getItem())

@@ -2,8 +2,8 @@ package org.sep.sellerservice.service;
 
 import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
 import org.sep.sellerservice.api.PaymentMethod;
-import org.sep.sellerservice.api.SellerPaymentMethods;
 import org.sep.sellerservice.dto.SellerDto;
+import org.sep.sellerservice.dto.SellerPaymentMethodsDto;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.model.Seller;
 
@@ -17,7 +17,9 @@ public interface SellerService {
 
     SellerDto update(Seller seller);
 
-    SellerDto addPaymentMethods(SellerPaymentMethods sellerPaymentMethods);
+    String addPaymentMethods(SellerPaymentMethodsDto sellerPaymentMethodsDto);
 
     List<PaymentMethod> getSellerPaymentMethods(Payment payment);
+
+    void enableSeller(String sellerIssn);
 }

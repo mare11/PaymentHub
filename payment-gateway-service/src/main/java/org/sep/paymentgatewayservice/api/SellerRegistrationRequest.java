@@ -13,4 +13,5 @@ public class SellerRegistrationRequest {
 
     private String name;
     private String issn;
+    private String returnUrl;
 }

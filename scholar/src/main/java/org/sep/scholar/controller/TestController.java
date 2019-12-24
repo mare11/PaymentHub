@@ -30,6 +30,7 @@ public class TestController {
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SellerRegistrationResponse> registerSeller(@RequestBody SellerRegistrationRequest sellerRegistrationRequest) {
+        sellerRegistrationRequest.setReturnUrl(HTTP_PREFIX + SERVER_ADDRESS + ":" + this.SERVER_PORT);
         return this.restTemplate.postForEntity(HTTP_PREFIX + SERVER_ADDRESS + ":" + GATEWAY_PORT + "/register", sellerRegistrationRequest, SellerRegistrationResponse.class);
     }
 

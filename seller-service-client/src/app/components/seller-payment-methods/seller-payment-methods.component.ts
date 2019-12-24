@@ -11,7 +11,7 @@ export class SellerPaymentMethodsComponent implements OnInit {
 
   sellerId: number;
   paymentMethods: any[];
-  paymentProcessing = false;
+  selectionProcessing = false;
 
   constructor(private sellerService: SellerPaymentMethodsService, private route: ActivatedRoute) { }
 
@@ -35,15 +35,14 @@ export class SellerPaymentMethodsComponent implements OnInit {
                                                               delete method.checked;
                                                               return method;
                                                             });
-    this.paymentProcessing = true;
+    this.selectionProcessing = true;
     this.sellerService.sellerPaymentMethods(sellerPaymentMethods).subscribe(
-      () => {
-        alert('Success');
-        this.paymentProcessing = false;
+      (response: any) => {
+        window.location.href = response.redirectionUrl;
       },
       () => {
         alert('Failure');
-        this.paymentProcessing = false;
+        this.selectionProcessing = false;
       }
     );
   }

@@ -18,4 +18,7 @@ public interface SellerServiceApi {
 
     @PostMapping(value = "/prepare_payment", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PaymentResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);
+
+    @PostMapping(value = "/enable", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Void> enableSeller(@RequestBody String sellerIssn);
 }

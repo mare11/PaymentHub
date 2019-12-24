@@ -18,4 +18,7 @@ public interface PaymentMethodApi {
 
     @PostMapping(value = "/complete", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<String> completePayment(@RequestBody PaymentCompleteRequest paymentCompleteRequest);
+
+    @PostMapping(value = "/retrieve", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> retrieveSellerRegistrationUrl(URI baseUrl, @RequestBody String merchantId);
 }

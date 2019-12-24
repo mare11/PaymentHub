@@ -8,7 +8,7 @@
                         <input type="checkbox" class="form-check-input" [id]="method.id" [name]="method.name" [(ngModel)]="method.checked">
                     <label class="form-check-label" [htmlFor]="method.id">{{method.name}}</label>
                     </div>
-                    <button id="submit_btn" type="submit" class="btn btn-primary mt-2" (click)="confirm()" [disabled]="paymentProcessing">Confirm</button>
+                    <button id="submit_btn" type="submit" class="btn btn-primary mt-2" (click)="confirm()" [disabled]="selectionProcessing">Confirm</button>
                 </form>
             </div>
         </div>

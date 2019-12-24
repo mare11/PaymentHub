@@ -11,4 +11,7 @@ public interface PaymentMethodRegistrationApi {
 
     @PostMapping(value = "/payment_method_registration", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> registerPaymentMethod(@RequestBody PaymentMethodData paymentMethodData);
+
+    @PostMapping(value = "/proceed", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> proceedToNextPaymentMethod(@RequestBody String merchantId);
 }

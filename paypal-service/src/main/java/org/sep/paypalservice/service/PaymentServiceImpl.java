@@ -7,6 +7,7 @@ import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
+import org.sep.paymentgatewayservice.methodapi.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.methodapi.PaymentStatus;
 import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
@@ -50,11 +51,13 @@ public class PaymentServiceImpl implements PaymentService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
-    public PaymentServiceImpl(MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, PaymentTransactionRepository paymentTransactionRepository) {
+    public PaymentServiceImpl(MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, PaymentTransactionRepository paymentTransactionRepository, PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
         this.merchantPaymentDetailsRepository = merchantPaymentDetailsRepository;
         this.paymentTransactionRepository = paymentTransactionRepository;
+        this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
     }
 
     @Override
@@ -227,5 +230,31 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return order;
+    }
+
+    @Override
+    public String retrieveSellerRegistrationUrl(String merchantId) {
+        log.info("Registration page url retrieving...");
+        return HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?merchantId=" + merchantId;
+    }
+
+    @Override
+    public String registerSeller(MerchantPaymentDetails merchantPaymentDetails) {
+        Assert.notNull(merchantPaymentDetails, "Payment request can't be null!");
+        Assert.noNullElements(
+                Stream.of(merchantPaymentDetails.getClientId(),
+                        merchantPaymentDetails.getClientSecret(),
+                        merchantPaymentDetails.getMerchantId())
+                        .toArray(),
+                "One or more fields are not specified.");
+
+        log.info("Saving payment details of merchant with id '{}'...", merchantPaymentDetails.getMerchantId());
+        this.merchantPaymentDetailsRepository.save(merchantPaymentDetails);
+        log.info("Merchant payment details are saved into DB...");
+
+        String returnUrl = this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantPaymentDetails.getMerchantId()).getBody();
+        log.info("Proceeding to next payment method is done successfully...");
+
+        return returnUrl;
     }
 }

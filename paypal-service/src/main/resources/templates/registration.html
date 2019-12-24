@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
+    <title>PayPal registration</title>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row justify-content-center mt-5">
+        <h1 class="display-4 font-italic my-4">Please enter your PayPal credentials</h1>
+    </div>
+    <form id="registration_form" class="mt-5">
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="client_id">Client ID</label>
+            <input type="text" class="col-6 form-control" id="client_id" name="client_id">
+        </div>
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="client_secret">Secret</label>
+            <input type="text" class="col-6 form-control" id="client_secret" name="client_secret">
+        </div>
+        <div class="form-group row justify-content-center">
+            <button type="submit" id="submit_btn" class="btn btn-danger">Confirm</button>
+        </div>
+        <input type="hidden" th:value="${merchantId}" name="merchantId" id="merchantId"/>
+    </form>
+</div>
+<script type="text/javascript" th:src="@{/webjars/bootstrap/4.0.0-2/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.js}"></script>
+<script type="text/javascript" th:src="@{/registration.js}"></script>
+</body>
+</html>

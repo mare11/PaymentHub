@@ -12,11 +12,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class ClientSideController {
 
-    private BitcoinService bitcoinService;
+    private final BitcoinService bitcoinService;
 
     @Autowired
-    public ClientSideController(BitcoinService bitcoinService){
+    public ClientSideController(BitcoinService bitcoinService) {
         this.bitcoinService = bitcoinService;
+    }
+
+    @GetMapping(value = "/registration")
+    public String registration(@RequestParam("issn") String issn, Model model) {
+        model.addAttribute("issn", issn);
+        return "registration";
     }
 
     @GetMapping(value = "/success_payment")

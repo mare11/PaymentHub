@@ -19,6 +19,12 @@ public class ClientSideController {
         this.paymentService = paymentService;
     }
 
+    @GetMapping(value = "/registration")
+    public String registration(@RequestParam("merchantId") String merchantId, Model model) {
+        model.addAttribute("merchantId", merchantId);
+        return "registration";
+    }
+
     @GetMapping(value = "/success_payment")
     public String successPayment(@RequestParam("token") String orderId, Model model) {
         model.addAttribute("returnUrl", this.completePayment(orderId, PaymentStatus.SUCCESS));
