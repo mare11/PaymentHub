@@ -1,10 +1,10 @@
 package org.sep.bitcoinservice.service;
 
 import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodRequest;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodResponse;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 
 public interface BitcoinService {
-    PaymentMethodResponse createOrder(PaymentMethodRequest request);
-    void completePayment(PaymentCompleteRequest request);
+    PaymentResponse createOrder(PaymentRequest request);
+    String completePayment(PaymentCompleteRequest request);
 }

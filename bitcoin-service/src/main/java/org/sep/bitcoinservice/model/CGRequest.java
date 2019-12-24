@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CGRequest {
-    private String order_id;
+    private Long order_id;
     private Double price_amount;
     private String price_currency;
     private String receive_currency;

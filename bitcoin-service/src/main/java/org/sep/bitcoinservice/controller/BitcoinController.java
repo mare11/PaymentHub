@@ -3,8 +3,8 @@ package org.sep.bitcoinservice.controller;
 import org.sep.bitcoinservice.service.BitcoinService;
 import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodRequest;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodResponse;
+import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +23,12 @@ public class BitcoinController implements PaymentMethodApi {
     }
 
     @Override
-    public ResponseEntity<PaymentMethodResponse> createPayment(URI baseUrl, PaymentMethodRequest paymentMethodRequest) {
-        return new ResponseEntity<>(bitcoinService.createOrder(paymentMethodRequest), HttpStatus.OK);
+    public ResponseEntity<PaymentResponse> createPayment(URI baseUrl, PaymentRequest paymentRequest) {
+        return new ResponseEntity<>(bitcoinService.createOrder(paymentRequest), HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<Void> completePayment(URI baseUrl, PaymentCompleteRequest paymentCompleteRequest) {
+    public ResponseEntity<String> completePayment(PaymentCompleteRequest paymentCompleteRequest) {
         this.bitcoinService.completePayment(paymentCompleteRequest);
         return new ResponseEntity<>(HttpStatus.OK);
     }

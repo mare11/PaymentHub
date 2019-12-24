@@ -18,9 +18,14 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private Long orderId;
+    @Column(unique = true, nullable = false)
+    private Long cgId;
+    @Column
+    private String item;
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private TransactionStatus status;
     @Column(nullable = false)
     private String priceCurrency;
@@ -28,6 +33,8 @@ public class Transaction {
     private String price;
     @Column
     private String timestamp;
+    @Column(nullable = false)
+    private String returnUrl;
     @ManyToOne
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
