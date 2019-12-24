@@ -29,6 +29,6 @@ public class PaymentController implements PaymentMethodApi {
 
     @Override
     public ResponseEntity<String> completePayment(PaymentCompleteRequest paymentCompleteRequest) {
-        return ResponseEntity.ok(this.paymentService.completePayment(paymentCompleteRequest));
+        return null;
     }
 }
