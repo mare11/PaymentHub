@@ -1,4 +1,4 @@
-package org.sep.acquirerservice.model;
+package org.sep.bankservice.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,37 +6,38 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-public class Card {
+public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String pan;
+    @Column(unique = true, nullable = false)
+    private String orderId;
 
     @Column(nullable = false)
-    private String ccv;
+    private String item;
 
     @Column(nullable = false)
-    private LocalDate expirationDate;
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
 
     @Column(nullable = false)
-    private String accountNumber;
+    private Double price;
 
     @Column(nullable = false)
-    private Double availableAmount;
+    private LocalDateTime timestamp;
 
     @Column(nullable = false)
-    private Double reservedAmount;
+    private String returnUrl;
 
     @ManyToOne
-    private Client client;
+    private Merchant merchant;
 }

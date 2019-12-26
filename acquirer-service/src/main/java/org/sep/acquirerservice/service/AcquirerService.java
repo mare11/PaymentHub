@@ -1,9 +1,9 @@
 package org.sep.acquirerservice.service;
 
-import org.sep.acquirerservice.api.TransactionRequest;
-import org.sep.acquirerservice.api.TransactionResponse;
 import org.sep.acquirerservice.model.CardDto;
 import org.sep.acquirerservice.model.Transaction;
+import org.sep.acquirerservice.model.TransactionRequest;
+import org.sep.acquirerservice.model.TransactionResponse;
 
 public interface AcquirerService {
 

@@ -1,7 +1,7 @@
 package org.sep.acquirerservice.controller;
 
-import org.sep.acquirerservice.api.TransactionResponse;
 import org.sep.acquirerservice.model.CardDto;
+import org.sep.acquirerservice.model.TransactionResponse;
 import org.sep.acquirerservice.service.AcquirerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

@@ -7,8 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
-    Client findByMerchantId(String merchantId);
+    Client findByMerchantIdAndMerchantPassword(String merchantId, String merchantPassword);
 
-//    @Query() todo
-//    Boolean isOwnerOfTheCard(Card card);
+    Client findByFirstNameAndLastNameAndCards_Pan(String firstName, String lastName, String pan);
 }

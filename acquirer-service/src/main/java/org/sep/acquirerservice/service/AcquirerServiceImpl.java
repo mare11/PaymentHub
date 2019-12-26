@@ -2,8 +2,6 @@ package org.sep.acquirerservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.sep.acquirerservice.api.TransactionRequest;
-import org.sep.acquirerservice.api.TransactionResponse;
 import org.sep.acquirerservice.exception.InvalidTransactionException;
 import org.sep.acquirerservice.exception.TransactionNotFoundException;
 import org.sep.acquirerservice.model.*;
@@ -15,9 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -51,22 +49,23 @@ public class AcquirerServiceImpl implements AcquirerService {
         assertAllNotNull(transactionRequest, transactionRequest.getMerchantId(), transactionRequest.getMerchantPassword(),
                 transactionRequest.getAmount(), transactionRequest.getSuccessUrl(), transactionRequest.getErrorUrl());
 
-        Client client = clientRepository.findByMerchantId(transactionRequest.getMerchantId());
+        Client client = clientRepository.findByMerchantIdAndMerchantPassword(transactionRequest.getMerchantId(), transactionRequest.getMerchantPassword());
         log.info("Client: {}", client);
-        if (client == null || !client.getMerchantPassword().equals(transactionRequest.getMerchantPassword())) {
+        if (client == null) {
             throw new InvalidTransactionException();
         }
 
+        String orderId = UUID.randomUUID().toString();
         TransactionEntity transaction = TransactionEntity.builder()
                 .amount(transactionRequest.getAmount())
-                .successUrl(transactionRequest.getSuccessUrl())
-                .errorUrl(transactionRequest.getErrorUrl())
+                .successUrl(transactionRequest.getSuccessUrl() + orderId)
+                .errorUrl(transactionRequest.getErrorUrl() + orderId)
                 .build();
 
         transaction = transactionRepository.save(transaction);
 
         return TransactionResponse.builder()
-                .paymentId(new Random().nextLong())
+                .paymentId(orderId)
                 .paymentUrl(HTTP_PREFIX + SERVER_ADDRESS + ":" + SERVER_PORT + URL_POSTFIX + transaction.getId())
                 .build();
     }
@@ -81,17 +80,21 @@ public class AcquirerServiceImpl implements AcquirerService {
         assertAllNotNull(id, cardDto, cardDto.getPan(), cardDto.getCcv(), cardDto.getExpirationDate(), cardDto.getCardholderName());
         TransactionEntity transaction = getTransactionEntity(id);
 
-        Card card = cardRepository.findByPanAndCcv(cardDto.getPan(), cardDto.getCcv());
+        Card card = cardRepository.findByPanAndCcvAndExpirationDate(cardDto.getPan(), cardDto.getCcv(), cardDto.getExpirationDate());
         // todo maybe use cancelUrl in case of any check below fails
         if (card == null || card.getExpirationDate().isBefore(LocalDate.now())) {
             throw new InvalidTransactionException();
         }
-        if (card.getAvailableAmount() - transaction.getAmount() < 0) {
+
+        List<String> names = getCardholderNames(cardDto.getCardholderName());
+        Client client = clientRepository.findByFirstNameAndLastNameAndCards_Pan(names.get(0), names.get(1), cardDto.getPan());
+        if (!cardDto.getCardholderName().equals(client.getFirstName() + " " + client.getLastName())) {
             throw new InvalidTransactionException();
         }
 
-        // todo validate the cardholder and expiration date in DB
-
+        if (card.getAvailableAmount() - transaction.getAmount() < 0) {
+            throw new InvalidTransactionException();
+        }
         card.setAvailableAmount(card.getAvailableAmount() - transaction.getAmount());
         card.setReservedAmount(card.getReservedAmount() + transaction.getAmount());
         cardRepository.save(card);
@@ -99,6 +102,14 @@ public class AcquirerServiceImpl implements AcquirerService {
         return TransactionResponse.builder()
                 .paymentUrl(transaction.getSuccessUrl())
                 .build();
+    }
+
+    private List<String> getCardholderNames(String fullName) {
+        List<String> names = List.of(fullName.split(" "));
+        if (names.size() != 2) {
+            throw new InvalidTransactionException();
+        }
+        return names;
     }
 
     private void assertAllNotNull(Object... objects) {
