@@ -87,7 +87,7 @@ public class AcquirerServiceImpl implements AcquirerService {
         assertAllNotNull(id, card, card.getPan(), card.getCcv(), card.getExpirationDate(), card.getCardholderName());
         TransactionEntity transaction = getTransactionEntity(id);
 
-        CardEntity customerCard = cardRepository.findByPanAndCcvAndExpirationDate(card.getPan(), card.getCcv(), card.getExpirationDate());
+        CardEntity customerCard = cardRepository.findByPanAndCcv(card.getPan(), card.getCcv());
         if (customerCard == null || customerCard.getExpirationDate().isBefore(LocalDate.now())) {
             log.error("Card not found or expired (transactionId: {}, cardId: {})", transaction.getId(), card.getId());
             throw new InvalidDataException();
