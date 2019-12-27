@@ -3,7 +3,7 @@ $(document).ready(
 
         event.preventDefault();
         let data = JSON.stringify({
-            "pan": $('#pan').val(), "ccv": $('#ccv').val(),
+            "id": $('#cardId').val(), "pan": $('#pan').val(), "ccv": $('#ccv').val(),
             "expirationDate": $('#date').val(), "cardholderName": $('#name').val()
         });
         console.log(data);

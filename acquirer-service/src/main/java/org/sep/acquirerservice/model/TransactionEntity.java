@@ -1,18 +1,12 @@
 package org.sep.acquirerservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import java.time.LocalDate;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -28,16 +22,26 @@ public class TransactionEntity {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
+    @Column
+    private String item;
+
     @Column(precision = 10, scale = 2, nullable = false)
     private Double amount;
 
+    @Column
+    private String description;
+
     @CreationTimestamp
-    private LocalDate timestamp;
+    private LocalDateTime timestamp;
 
     @Column(nullable = false)
     private String successUrl;
 
     @Column(nullable = false)
     private String errorUrl;
+
+    @ManyToOne
+    @ToString.Exclude
+    private CardEntity card;
 
 }

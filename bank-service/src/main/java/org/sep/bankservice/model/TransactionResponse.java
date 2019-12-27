@@ -1,4 +1,4 @@
-package org.sep.acquirerservice.api;
+package org.sep.bankservice.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class TransactionResponse {
-    private Long paymentId;
+    private String paymentId;
     private String paymentUrl;
 }

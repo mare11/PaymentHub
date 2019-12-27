@@ -1,4 +1,4 @@
-package org.sep.acquirerservice.api;
+package org.sep.acquirerservice.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +14,11 @@ import java.time.LocalDateTime;
 public class TransactionRequest {
     private String merchantId;
     private String merchantPassword;
-    private Long merchantOrderId;
+    private String merchantOrderId;
     private LocalDateTime merchantTimestamp;
+    private String item;
     private Double amount;
+    private String description;
     private String successUrl;
     private String errorUrl;
 }

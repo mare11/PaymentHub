@@ -1,4 +1,4 @@
-package org.sep.acquirerservice.model;
+package org.sep.bankservice.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,11 +13,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Client {
+public class Merchant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String issn;
 
     @Column(nullable = false)
     private String merchantId;
@@ -25,13 +28,6 @@ public class Client {
     @Column(nullable = false)
     private String merchantPassword;
 
-    @Column(nullable = false)
-    private String firstName;
-
-    @Column(nullable = false)
-    private String lastName;
-
-    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Card> cards;
-
+    @OneToMany(mappedBy = "merchant")
+    private Set<Transaction> transactions;
 }
