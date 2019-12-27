@@ -1,5 +1,6 @@
 package org.sep.bitcoinservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.exceptions.NoTransactionFoundException;
 import org.sep.bitcoinservice.model.Transaction;
 import org.sep.bitcoinservice.repository.TransactionRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
@@ -25,6 +27,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (transaction != null){
             return transaction;
         }else{
+            log.error("Transaction not found");
             throw new NoTransactionFoundException(orderId);
         }
     }
