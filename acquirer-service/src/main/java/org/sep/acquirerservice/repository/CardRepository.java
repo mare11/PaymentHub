@@ -1,15 +1,18 @@
 package org.sep.acquirerservice.repository;
 
-import org.sep.acquirerservice.model.Card;
+import org.sep.acquirerservice.model.CardEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 
 @Repository
-public interface CardRepository extends JpaRepository<Card, Long> {
+public interface CardRepository extends JpaRepository<CardEntity, Long> {
 
-    Card findByPanAndCcv(String pan, String ccv);
+    CardEntity findByPanAndCcv(String pan, String ccv);
 
-    Card findByPanAndCcvAndExpirationDate(String pan, String ccv, LocalDate expirationDate);
+    CardEntity findByPanAndCcvAndExpirationDate(String pan, String ccv, LocalDate expirationDate);
+
+    CardEntity findByMerchantIdAndMerchantPassword(String merchantId, String merchantPassword);
+
 }

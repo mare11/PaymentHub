@@ -1,7 +1,6 @@
 package org.sep.bankservice;
 
 import lombok.extern.slf4j.Slf4j;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
 import org.sep.paymentgatewayservice.methodapi.PaymentMethodRegistrationApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,11 +31,11 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent applicationReadyEvent) {
         log.info("Startup event at: {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(applicationReadyEvent.getTimestamp()), ZoneId.systemDefault()));
-        PaymentMethodData paymentMethodData = PaymentMethodData.builder()
-                .name(SERVICE_NAME)
-                .serviceName(this.SERVICE_HOST)
-                .port(Integer.valueOf(this.SERVICE_PORT))
-                .build();
-        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
+//        PaymentMethodData paymentMethodData = PaymentMethodData.builder()
+//                .name(SERVICE_NAME)
+//                .serviceName(this.SERVICE_HOST)
+//                .port(Integer.valueOf(this.SERVICE_PORT))
+//                .build();
+//        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
     }
 }

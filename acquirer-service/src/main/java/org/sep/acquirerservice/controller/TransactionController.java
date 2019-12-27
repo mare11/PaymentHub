@@ -1,6 +1,6 @@
 package org.sep.acquirerservice.controller;
 
-import org.sep.acquirerservice.model.CardDto;
+import org.sep.acquirerservice.model.Card;
 import org.sep.acquirerservice.model.TransactionResponse;
 import org.sep.acquirerservice.service.AcquirerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,8 @@ public class TransactionController {
 
     @ResponseBody
     @PostMapping(value = "/execute/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public TransactionResponse executeTransaction(@PathVariable String id, @RequestBody CardDto cardDto) {
-        return acquirerService.executeTransaction(id, cardDto);
+    public TransactionResponse executeTransaction(@PathVariable String id, @RequestBody Card card) {
+        return acquirerService.executeTransaction(id, card);
     }
 
 

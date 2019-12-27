@@ -8,15 +8,24 @@
 </head>
 <body>
 <div class="container-fluid">
-    <!--    Amount:-->
-    <!--    <label class="form-check-label card-text" th:text="${transaction.amount}"></label>-->
-    <!--    <br/>-->
-    <!--    Timestamp:-->
-    <!--    <label class="form-check-label card-text" th:text="${transaction.timestamp}"></label>-->
-    <div class="row justify-content-center mt-5">
+    <div class="justify-content-center mt-3">
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Item:</b></label>
+            <label class="col-1" th:text="${transaction.item}"></label>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Amount:</b></label>
+            <label class="col-1" th:text="${transaction.amount}"></label>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Description:</b></label>
+            <label class="col-1" th:text="${transaction.description}"></label>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-3">
         <h1 class="display-4 my-4">Please enter your card details</h1>
     </div>
-    <form id="acquirer_form" class="mt-5">
+    <form id="acquirer_form" class="mt-3">
         <div class="form-group row justify-content-center">
             <label class="col-1" for="pan">Payment Card Number</label>
             <input type="number" class="col-6 form-control" id="pan" name="pan">
@@ -38,6 +47,7 @@
             <button type="submit" id="submit_btn" class="btn btn-primary col-6">Submit</button>
         </div>
         <input hidden th:value="${transaction.id}" id="id">
+        <input hidden th:value="${transaction.cardId}" id="cardId">
     </form>
 </div>
 

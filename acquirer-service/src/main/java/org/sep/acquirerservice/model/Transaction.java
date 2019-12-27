@@ -13,6 +13,9 @@ import java.time.LocalDate;
 @Builder
 public class Transaction {
     private String id;
+    private String item;
     private Double amount;
+    private String description;
     private LocalDate timestamp;
+    private Long cardId;
 }

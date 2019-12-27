@@ -54,7 +54,6 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public PaymentResponse createPayment(PaymentRequest paymentRequest) {
-        log.info("{}", paymentRequest);
         assertAllNotNull(paymentRequest, paymentRequest.getSellerIssn(), paymentRequest.getItem(),
                 paymentRequest.getPrice(), paymentRequest.getReturnUrl());
         Merchant merchant = getMerchant(paymentRequest.getSellerIssn());
@@ -64,25 +63,28 @@ public class BankServiceImpl implements BankService {
                 .merchantPassword(merchant.getMerchantPassword())
 //                .merchantOrderId(orderId)
                 .merchantTimestamp(LocalDateTime.now())
+                .item(paymentRequest.getItem())
                 .amount(paymentRequest.getPrice())
+                .description(paymentRequest.getDescription())
                 .successUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=")
                 .errorUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=")
                 .build();
 
+        log.info("Sending request (merchantId: {}, item: {}) to acquirer", merchant.getMerchantId(), paymentRequest.getItem());
         HttpEntity<TransactionRequest> requestEntity = new HttpEntity<>(transactionRequest);
         ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(HTTP_PREFIX + ACQUIRER_URL,
                 HttpMethod.POST, requestEntity, TransactionResponse.class);
 
         TransactionResponse response = responseEntity.getBody();
-        log.info("{}", response);
-
         if (response == null) {
+            log.error("Wrong response from acquirer (merchantId: {}, item: {})", merchant.getMerchantId(), paymentRequest.getItem());
             return PaymentResponse.builder()
                     .paymentUrl(paymentRequest.getReturnUrl())
                     .status(CreatePaymentStatus.ERROR)
                     .build();
         }
 
+        log.info("Response from acquirer (paymentId: {}, paymentUrl: {})", response.getPaymentId(), response.getPaymentUrl());
         Transaction transaction = Transaction.builder()
                 .orderId(response.getPaymentId())
                 .item(paymentRequest.getItem())
@@ -94,7 +96,8 @@ public class BankServiceImpl implements BankService {
                 .build();
 
         transactionRepository.save(transaction);
-        log.info("{}", transaction);
+        log.info("Transaction (item: {}, price: {}, timestamp: {}, merchantId: {}) saved",
+                transaction.getItem(), transaction.getPrice(), transaction.getTimestamp(), merchant.getMerchantId());
 
         return PaymentResponse.builder()
                 .orderId(response.getPaymentId())
@@ -111,6 +114,7 @@ public class BankServiceImpl implements BankService {
         }
         transaction.setStatus(paymentCompleteRequest.getStatus() == PaymentStatus.SUCCESS ? FINISHED : CANCELED);
         transactionRepository.save(transaction);
+        log.info("Transaction status updated ({})", transaction.getStatus());
         return transaction.getReturnUrl();
     }
 
@@ -122,6 +126,7 @@ public class BankServiceImpl implements BankService {
     @Override
     public String registerSeller(Merchant merchant) {
         merchantRepository.save(merchant);
+        log.info("Merchant (issn: {}, merchantId: {}) registered", merchant.getIssn(), merchant.getMerchantId());
         return paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getIssn()).getBody();
     }
 
@@ -133,10 +138,11 @@ public class BankServiceImpl implements BankService {
 
     private Merchant getMerchant(String issn) {
         Merchant merchant = merchantRepository.findByIssn(issn);
-        log.info("{}", merchant);
         if (merchant == null) {
+            log.error("No merchant for issn: {}", issn);
             throw new MerchantNotFoundException(issn);
         }
+        log.info("Found merchant with issn: {}", issn);
         return merchant;
     }
 }

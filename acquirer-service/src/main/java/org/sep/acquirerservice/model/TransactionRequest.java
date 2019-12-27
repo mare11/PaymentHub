@@ -16,7 +16,9 @@ public class TransactionRequest {
     private String merchantPassword;
     private String merchantOrderId;
     private LocalDateTime merchantTimestamp;
+    private String item;
     private Double amount;
+    private String description;
     private String successUrl;
     private String errorUrl;
 }

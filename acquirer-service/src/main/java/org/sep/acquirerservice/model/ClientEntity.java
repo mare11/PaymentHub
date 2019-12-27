@@ -1,9 +1,6 @@
 package org.sep.acquirerservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -12,18 +9,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-public class Client {
+@Entity(name = "client")
+public class ClientEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private String merchantId;
-
-    @Column(nullable = false)
-    private String merchantPassword;
 
     @Column(nullable = false)
     private String firstName;
@@ -32,6 +23,7 @@ public class Client {
     private String lastName;
 
     @OneToMany(mappedBy = "client")
-    private Set<Card> cards;
+    @ToString.Exclude
+    private Set<CardEntity> cards;
 
 }
