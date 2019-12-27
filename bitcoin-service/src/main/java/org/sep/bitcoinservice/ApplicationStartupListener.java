@@ -37,6 +37,6 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
                 .serviceName(this.SERVICE_HOST)
                 .port(Integer.valueOf(this.SERVICE_PORT))
                 .build();
-        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
+//        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
     }
 }

@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 public class TestController {
 
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTP_PREFIX = "https://";
     private static final String SERVER_ADDRESS = "127.0.0.1";
     @Value("${server.port}")
     private String SERVER_PORT;
