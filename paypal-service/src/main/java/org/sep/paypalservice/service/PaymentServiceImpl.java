@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +82,6 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentTransaction paymentTransaction = PaymentTransaction.builder()
                 .orderId(order.id())
                 .status(TransactionStatus.valueOf(order.status()))
-                .createdAt(LocalDateTime.parse(order.createTime(), DATE_TIME_FORMATTER))
                 .merchantId(paymentRequest.getSellerIssn())
                 .item(order.purchaseUnits().get(0).items().get(0).name())
                 .value(Double.valueOf(order.purchaseUnits().get(0).amountWithBreakdown().value()))
@@ -173,12 +171,10 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = this.sendRequest(request, merchantPaymentDetails);
 
             paymentTransaction.setStatus(TransactionStatus.COMPLETED);
-            paymentTransaction.setUpdatedAt(LocalDateTime.parse(order.updateTime(), DATE_TIME_FORMATTER));
             paymentTransaction.setPayerId(order.payer().payerId());
 
         } else {
             paymentTransaction.setStatus(TransactionStatus.VOIDED);
-            paymentTransaction.setUpdatedAt(LocalDateTime.parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER));
         }
 
         paymentTransaction = this.update(paymentTransaction);
