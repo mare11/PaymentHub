@@ -35,7 +35,7 @@ public class BankServiceImpl implements BankService {
 
     private static final String ACQUIRER_URL = "localhost:9991/prepare";
     private static final String HTTP_PREFIX = "http://";
-    @Value("${server.address}")
+    @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
     private String SERVER_PORT;

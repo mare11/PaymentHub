@@ -29,7 +29,7 @@ public class AcquirerServiceImpl implements AcquirerService {
     private final ModelMapper modelMapper;
     private static final String HTTP_PREFIX = "http://";
     private static final String URL_POSTFIX = "/transaction/";
-    @Value("${server.address}")
+    @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
     private String SERVER_PORT;
