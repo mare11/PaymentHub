@@ -1,5 +1,6 @@
 package org.sep.sellerservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
@@ -17,6 +18,7 @@ import org.springframework.util.Assert;
 
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
@@ -47,9 +49,12 @@ public class PaymentServiceImpl implements PaymentService {
                 "One or more fields are not specified.");
 
         Seller seller = this.sellerRepository.findByIssn(paymentRequest.getSellerIssn());
+        log.info("Seller with issn: {} is retrieved", paymentRequest.getSellerIssn());
 
-        if (seller == null || !seller.getEnabled())
+        if (seller == null || !seller.getEnabled()) {
+            log.error("Seller is not found or is not enabled");
             throw new NoSellerFoundException(paymentRequest.getSellerIssn());
+        }
 
         Payment payment = Payment.builder()
                 .seller(seller)
@@ -60,6 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .returnUrl(paymentRequest.getReturnUrl())
                 .build();
         payment = this.paymentRepository.save(payment);
+        log.info("Payment (merchant: {}, item: {}) is created and saved in seller", payment.getSeller().getIssn(), payment.getItem());
         return payment.getId();
     }
 
@@ -78,9 +84,15 @@ public class PaymentServiceImpl implements PaymentService {
                 "One or more fields in payment method are not specified.");
         Payment payment = this.findById(customerPaymentDto.getPaymentId());
 
-        if (payment == null) throw new NoPaymentFoundException(customerPaymentDto.getPaymentId());
+        if (payment == null){
+            log.error("Payment is not found");
+            throw new NoPaymentFoundException(customerPaymentDto.getPaymentId());
+        }
 
-        if (!payment.getSeller().getEnabled()) throw new SellerIsNotEnabledException(payment.getSeller().getIssn());
+        if (!payment.getSeller().getEnabled()) {
+            log.error("Seller is not enabled");
+            throw new SellerIsNotEnabledException(payment.getSeller().getIssn());
+        }
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .item(payment.getItem())
@@ -91,6 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .sellerName(payment.getSeller().getName())
                 .returnUrl(payment.getReturnUrl())
                 .build();
+        log.info("Payment request sent to gateway from seller");
         return this.paymentGatewayServiceApi.createPayment(paymentRequest).getBody();
     }
 }

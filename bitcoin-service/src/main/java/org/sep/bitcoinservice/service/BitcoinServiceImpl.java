@@ -1,6 +1,6 @@
 package org.sep.bitcoinservice.service;
 
-import org.sep.bitcoinservice.exceptions.NoMerchantFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.model.*;
 import org.sep.bitcoinservice.repository.TransactionIdRespository;
 import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
@@ -19,11 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Service
 public class BitcoinServiceImpl implements BitcoinService {
 
     private static final String HTTP_PREFIX = "http://";
-    @Value("${server.address}")
+    @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
     private String SERVER_PORT;
@@ -34,7 +35,7 @@ public class BitcoinServiceImpl implements BitcoinService {
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
-    public BitcoinServiceImpl(RestTemplate restTemplate, MerchantService merchantService, TransactionService transactionService, TransactionIdRespository transactionIdRespository, PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
+    public BitcoinServiceImpl(final RestTemplate restTemplate, final MerchantService merchantService, final TransactionService transactionService, final TransactionIdRespository transactionIdRespository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
         this.restTemplate = restTemplate;
         this.merchantService = merchantService;
         this.transactionService = transactionService;
@@ -43,11 +44,13 @@ public class BitcoinServiceImpl implements BitcoinService {
     }
 
     @Override
-    public PaymentResponse createOrder(PaymentRequest paymentRequest) {
+    public PaymentResponse createOrder(final PaymentRequest paymentRequest) {
         try {
             TransactionId transactionId = new TransactionId();
             transactionId = this.transactionIdRespository.save(transactionId);
-            CGRequest cgRequest = CGRequest.builder()
+            log.info("Transaction id is created");
+
+            final CGRequest cgRequest = CGRequest.builder()
                     .price_amount(paymentRequest.getPrice())
                     .receive_currency("DO_NOT_CONVERT")
                     .title(paymentRequest.getSellerName() + " : " + paymentRequest.getItem())
@@ -63,18 +66,19 @@ public class BitcoinServiceImpl implements BitcoinService {
                 cgRequest.setPrice_currency("BTC");
             }
 
-            Merchant merchant = this.merchantService.findByIssn(paymentRequest.getSellerIssn());
-            if (merchant == null) {
-                throw new NoMerchantFoundException(paymentRequest.getSellerIssn());
-            }
+            final Merchant merchant = this.merchantService.findByIssn(paymentRequest.getSellerIssn());
+            log.info("Merchant with issn:{} is retrieved", merchant.getIssn());
 
-            HttpHeaders headers = new HttpHeaders();
+            final HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Token " + merchant.getToken());
-            HttpEntity<CGRequest> requestEntity = new HttpEntity<>(cgRequest, headers);
-            ResponseEntity<CGResponse> response = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders", HttpMethod.POST, requestEntity, CGResponse.class);
-            CGResponse cgResponse = response.getBody();
+            final HttpEntity<CGRequest> requestEntity = new HttpEntity<>(cgRequest, headers);
 
-            Transaction transaction = Transaction.builder()
+            log.info("Payment request(merchant: {}, item: {}) is sent", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            final ResponseEntity<CGResponse> response = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders", HttpMethod.POST, requestEntity, CGResponse.class);
+            final CGResponse cgResponse = response.getBody();
+            log.info("Payment request (merchant: {}, item: {}) is approved", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+
+            final Transaction transaction = Transaction.builder()
                     .merchant(merchant)
                     .orderId(cgResponse.getOrder_id())
                     .cgId(cgResponse.getId())
@@ -86,15 +90,17 @@ public class BitcoinServiceImpl implements BitcoinService {
                     .returnUrl(paymentRequest.getReturnUrl())
                     .build();
             this.transactionService.save(transaction);
+            log.info("Transaction (merchant: {}, item: {})  is saved", paymentRequest.getSellerIssn(), paymentRequest.getItem());
 
-            PaymentResponse paymentMethodResponse = PaymentResponse.builder()
+            final PaymentResponse paymentMethodResponse = PaymentResponse.builder()
                     .paymentUrl(cgResponse.getPayment_url())
                     .orderId(cgResponse.getId().toString())
                     .status(CreatePaymentStatus.CREATED)
                     .build();
             return paymentMethodResponse;
-        } catch (HttpClientErrorException e) {
-            PaymentResponse paymentMethodResponse = PaymentResponse.builder()
+        } catch (final HttpClientErrorException e) {
+            log.error("Payment request (merchant: {}, item: {}) is denied", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            final PaymentResponse paymentMethodResponse = PaymentResponse.builder()
                     .status(CreatePaymentStatus.ERROR)
                     .paymentUrl(paymentRequest.getReturnUrl())
                     .build();
@@ -103,26 +109,30 @@ public class BitcoinServiceImpl implements BitcoinService {
     }
 
     @Override
-    public String completePayment(PaymentCompleteRequest request) {
-        Transaction transaction = this.transactionService.findByOrderId(Long.parseLong(request.getOrderId()));
+    public String completePayment(final PaymentCompleteRequest request) {
+        final Transaction transaction = this.transactionService.findByOrderId(Long.parseLong(request.getOrderId()));
         if (request.getStatus() == PaymentStatus.SUCCESS) {
             transaction.setStatus(TransactionStatus.FINISHED);
             this.transactionService.save(transaction);
+            log.info("Transaction (merchant: {}, item: {}) is finished and updated", transaction.getMerchant().getIssn(), transaction.getItem());
         } else {
             transaction.setStatus(TransactionStatus.CANCELED);
             this.transactionService.save(transaction);
+            log.info("Transaction (merchant: {}, item: {}) is canceled and updated", transaction.getMerchant().getIssn(), transaction.getItem());
         }
         return transaction.getReturnUrl();
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(String issn) {
+    public String retrieveSellerRegistrationUrl(final String issn) {
+        log.info("Bitcoin registration page is sent");
         return HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
     }
 
     @Override
-    public String registerSeller(Merchant merchant) {
+    public String registerSeller(final Merchant merchant) {
         this.merchantService.save(merchant);
+        log.info("Merchant with issn: {} is created", merchant.getIssn());
         return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getIssn()).getBody();
     }
 }

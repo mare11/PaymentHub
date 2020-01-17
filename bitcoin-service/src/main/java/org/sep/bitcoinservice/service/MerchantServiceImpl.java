@@ -1,5 +1,6 @@
 package org.sep.bitcoinservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.exceptions.NoMerchantFoundException;
 import org.sep.bitcoinservice.model.Merchant;
 import org.sep.bitcoinservice.repository.MerchantRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 public class MerchantServiceImpl implements MerchantService {
 
@@ -25,6 +27,7 @@ public class MerchantServiceImpl implements MerchantService {
         if (merchant != null) {
             return merchant;
         }else{
+            log.error("Merchant not found");
             throw new NoMerchantFoundException(issn);
         }
     }

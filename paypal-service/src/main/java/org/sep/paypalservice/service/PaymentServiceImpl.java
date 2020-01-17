@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String APPROVE_REL = "approve";
     private static final String PREFER_HEADER = "return=representation";
     private static final String HTTP_PREFIX = "http://";
-    @Value("${server.address}")
+    @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
     private String SERVER_PORT;
@@ -54,14 +53,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
-    public PaymentServiceImpl(MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, PaymentTransactionRepository paymentTransactionRepository, PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
+    public PaymentServiceImpl(final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, final PaymentTransactionRepository paymentTransactionRepository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
         this.merchantPaymentDetailsRepository = merchantPaymentDetailsRepository;
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
     }
 
     @Override
-    public PaymentResponse createPayment(PaymentRequest paymentRequest) throws NoMerchantFoundException, PaymentCouldNotBeCreatedException {
+    public PaymentResponse createPayment(final PaymentRequest paymentRequest) throws NoMerchantFoundException, PaymentCouldNotBeCreatedException {
         Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentRequest.getSellerIssn(),
@@ -70,20 +69,19 @@ public class PaymentServiceImpl implements PaymentService {
                         .toArray(),
                 "One or more fields are not specified.");
 
-        MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentRequest.getSellerIssn());
+        final MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentRequest.getSellerIssn());
 
-        OrdersCreateRequest request = this.createOrderRequest(paymentRequest);
+        final OrdersCreateRequest request = this.createOrderRequest(paymentRequest);
         log.info("Request is created...");
 
-        Order order = this.sendRequest(request, merchantPaymentDetails);
+        final Order order = this.sendRequest(request, merchantPaymentDetails);
 
-        LinkDescription approveLink = order.links().stream().filter(link -> link.rel().equals(APPROVE_REL)).findFirst().orElse(null);
+        final LinkDescription approveLink = order.links().stream().filter(link -> link.rel().equals(APPROVE_REL)).findFirst().orElse(null);
         log.info("Approve link is retrieved...");
 
-        PaymentTransaction paymentTransaction = PaymentTransaction.builder()
+        final PaymentTransaction paymentTransaction = PaymentTransaction.builder()
                 .orderId(order.id())
                 .status(TransactionStatus.valueOf(order.status()))
-                .createdAt(LocalDateTime.parse(order.createTime(), DATE_TIME_FORMATTER))
                 .merchantId(paymentRequest.getSellerIssn())
                 .item(order.purchaseUnits().get(0).items().get(0).name())
                 .value(Double.valueOf(order.purchaseUnits().get(0).amountWithBreakdown().value()))
@@ -101,43 +99,43 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
-    private OrdersCreateRequest createOrderRequest(PaymentRequest paymentRequest) {
+    private OrdersCreateRequest createOrderRequest(final PaymentRequest paymentRequest) {
 
-        Money money = new Money()
+        final Money money = new Money()
                 .currencyCode(paymentRequest.getPriceCurrency() == null ? DEFAULT_CURRENCY : paymentRequest.getPriceCurrency())
                 .value(String.format("%.2f", paymentRequest.getPrice()));
 
-        AmountBreakdown amountBreakdown = new AmountBreakdown().itemTotal(money);
+        final AmountBreakdown amountBreakdown = new AmountBreakdown().itemTotal(money);
 
-        AmountWithBreakdown amountWithBreakdown = new AmountWithBreakdown()
+        final AmountWithBreakdown amountWithBreakdown = new AmountWithBreakdown()
                 .currencyCode(money.currencyCode())
                 .value(money.value())
                 .amountBreakdown(amountBreakdown);
 
-        Item item = new Item()
+        final Item item = new Item()
                 .name(paymentRequest.getItem() == null ? "" : paymentRequest.getItem())
                 .category(ITEM_CATEGORY)
                 .description(paymentRequest.getDescription() == null ? "" : paymentRequest.getDescription())
                 .quantity("1")
                 .unitAmount(money);
 
-        List<Item> items = new ArrayList<>();
+        final List<Item> items = new ArrayList<>();
         items.add(item);
 
-        PurchaseUnitRequest purchaseUnitRequest = new PurchaseUnitRequest()
+        final PurchaseUnitRequest purchaseUnitRequest = new PurchaseUnitRequest()
                 .amountWithBreakdown(amountWithBreakdown)
                 .items(items);
 
-        List<PurchaseUnitRequest> purchaseUnitRequests = new ArrayList<>();
+        final List<PurchaseUnitRequest> purchaseUnitRequests = new ArrayList<>();
         purchaseUnitRequests.add(purchaseUnitRequest);
 
-        ApplicationContext applicationContext = new ApplicationContext()
+        final ApplicationContext applicationContext = new ApplicationContext()
                 .brandName(paymentRequest.getSellerName() == null ? "" : paymentRequest.getSellerName())
                 .locale(SERBIAN_LOCALE)
                 .returnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment")
                 .cancelUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment");
 
-        OrderRequest orderRequest = new OrderRequest()
+        final OrderRequest orderRequest = new OrderRequest()
                 .checkoutPaymentIntent(INTENT)
                 .purchaseUnits(purchaseUnitRequests)
                 .applicationContext(applicationContext);
@@ -149,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String completePayment(PaymentCompleteRequest paymentCompleteRequest) throws NoOrderFoundException {
+    public String completePayment(final PaymentCompleteRequest paymentCompleteRequest) throws NoOrderFoundException {
         Assert.notNull(paymentCompleteRequest, "Payment complete request can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentCompleteRequest.getOrderId(),
@@ -159,26 +157,28 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentTransaction paymentTransaction = this.paymentTransactionRepository.findByOrderId(paymentCompleteRequest.getOrderId());
 
-        if (paymentTransaction == null) throw new NoOrderFoundException(paymentCompleteRequest.getOrderId());
+        if (paymentTransaction == null) {
+            throw new NoOrderFoundException(paymentCompleteRequest.getOrderId());
+        }
         log.info("Transaction is retrieved from DB...");
 
-        if (paymentTransaction.getStatus() != TransactionStatus.CREATED) return paymentTransaction.getReturnUrl();
+        if (paymentTransaction.getStatus() != TransactionStatus.CREATED) {
+            return paymentTransaction.getReturnUrl();
+        }
 
         if (paymentCompleteRequest.getStatus() == PaymentStatus.SUCCESS) {
 
-            OrdersCaptureRequest request = new OrdersCaptureRequest(paymentCompleteRequest.getOrderId())
+            final OrdersCaptureRequest request = new OrdersCaptureRequest(paymentCompleteRequest.getOrderId())
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .prefer(PREFER_HEADER);
-            MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentTransaction.getMerchantId());
-            Order order = this.sendRequest(request, merchantPaymentDetails);
+            final MerchantPaymentDetails merchantPaymentDetails = this.getMerchantPaymentDetails(paymentTransaction.getMerchantId());
+            final Order order = this.sendRequest(request, merchantPaymentDetails);
 
             paymentTransaction.setStatus(TransactionStatus.COMPLETED);
-            paymentTransaction.setUpdatedAt(LocalDateTime.parse(order.updateTime(), DATE_TIME_FORMATTER));
             paymentTransaction.setPayerId(order.payer().payerId());
 
         } else {
             paymentTransaction.setStatus(TransactionStatus.VOIDED);
-            paymentTransaction.setUpdatedAt(LocalDateTime.parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER));
         }
 
         paymentTransaction = this.update(paymentTransaction);
@@ -188,44 +188,47 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentTransaction update(PaymentTransaction paymentTransaction) {
+    public PaymentTransaction update(final PaymentTransaction paymentTransaction) {
         Assert.notNull(paymentTransaction, "Payment transaction can't be null!");
 
-        if (this.paymentTransactionRepository.findById(paymentTransaction.getId()).isEmpty())
+        if (this.paymentTransactionRepository.findById(paymentTransaction.getId()).isEmpty()) {
             throw new NoOrderFoundException(paymentTransaction.getOrderId());
+        }
 
         return this.paymentTransactionRepository.save(paymentTransaction);
     }
 
-    private PayPalHttpClient getHttpClient(MerchantPaymentDetails merchantPaymentDetails) {
-        PayPalEnvironment environment = new PayPalEnvironment.Sandbox(merchantPaymentDetails.getClientId(), merchantPaymentDetails.getClientSecret());
+    private PayPalHttpClient getHttpClient(final MerchantPaymentDetails merchantPaymentDetails) {
+        final PayPalEnvironment environment = new PayPalEnvironment.Sandbox(merchantPaymentDetails.getClientId(), merchantPaymentDetails.getClientSecret());
         log.info("Environment is created...");
 
-        PayPalHttpClient httpClient = new PayPalHttpClient(environment);
+        final PayPalHttpClient httpClient = new PayPalHttpClient(environment);
         log.info("HttpClient is created...");
         return httpClient;
     }
 
-    private MerchantPaymentDetails getMerchantPaymentDetails(String merchantId) {
-        MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsRepository.findByMerchantId(merchantId);
+    private MerchantPaymentDetails getMerchantPaymentDetails(final String merchantId) {
+        final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsRepository.findByMerchantId(merchantId);
         log.info("Merchant is retrieved from DB...");
 
-        if (merchantPaymentDetails == null) throw new NoMerchantFoundException(merchantId);
+        if (merchantPaymentDetails == null) {
+            throw new NoMerchantFoundException(merchantId);
+        }
         log.info("Merchant is not null...");
         return merchantPaymentDetails;
     }
 
-    private Order sendRequest(HttpRequest<Order> request, MerchantPaymentDetails merchantPaymentDetails) {
-        PayPalHttpClient httpClient = this.getHttpClient(merchantPaymentDetails);
+    private Order sendRequest(final HttpRequest<Order> request, final MerchantPaymentDetails merchantPaymentDetails) {
+        final PayPalHttpClient httpClient = this.getHttpClient(merchantPaymentDetails);
 
         Order order = null;
         try {
             log.info("Request is executing...");
-            HttpResponse<Order> response = httpClient.execute(request);
+            final HttpResponse<Order> response = httpClient.execute(request);
             log.info("Response is retrieved...");
 
             order = response.result();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new PaymentCouldNotBeCreatedException(e.getMessage());
         }
 
@@ -233,13 +236,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(String merchantId) {
+    public String retrieveSellerRegistrationUrl(final String merchantId) {
         log.info("Registration page url retrieving...");
         return HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?merchantId=" + merchantId;
     }
 
     @Override
-    public String registerSeller(MerchantPaymentDetails merchantPaymentDetails) {
+    public String registerSeller(final MerchantPaymentDetails merchantPaymentDetails) {
         Assert.notNull(merchantPaymentDetails, "Payment request can't be null!");
         Assert.noNullElements(
                 Stream.of(merchantPaymentDetails.getClientId(),
@@ -252,7 +255,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.merchantPaymentDetailsRepository.save(merchantPaymentDetails);
         log.info("Merchant payment details are saved into DB...");
 
-        String returnUrl = this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantPaymentDetails.getMerchantId()).getBody();
+        final String returnUrl = this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantPaymentDetails.getMerchantId()).getBody();
         log.info("Proceeding to next payment method is done successfully...");
 
         return returnUrl;

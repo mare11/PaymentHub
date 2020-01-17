@@ -25,7 +25,7 @@ import java.util.List;
 public class SellerServiceController implements SellerServiceApi {
 
     private static final String HTTP_PREFIX = "http://";
-    @Value("${server.address}")
+    @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${frontend-port}")
     private String SERVER_PORT;

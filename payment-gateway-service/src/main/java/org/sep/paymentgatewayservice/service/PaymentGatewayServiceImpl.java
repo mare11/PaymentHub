@@ -37,6 +37,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
     @Override
     public PaymentResponse preparePayment(PaymentRequest paymentRequest) {
+        log.info("Call seller service to prepare payment");
         return this.sellerServiceApi.preparePayment(paymentRequest).getBody();
     }
 
@@ -44,9 +45,14 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public PaymentResponse createPayment(PaymentRequest paymentRequest) throws NoPaymentMethodFoundException {
         PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentRequest.getMethod());
 
-        if (paymentMethodData == null) throw new NoPaymentMethodFoundException(paymentRequest.getMethod());
+        if (paymentMethodData == null){
+            log.error("Payment method not found");
+            throw new NoPaymentMethodFoundException(paymentRequest.getMethod());
+        }
 
         URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
+
+        log.info("Payment request sent to {} payment method from gateway", paymentMethodData.getName());
         return this.paymentMethodApi.createPayment(serviceBaseUri, paymentRequest).getBody();
     }
 

@@ -4,28 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.css}"/>
-    <title>Test</title>
+    <title>Bank checkout</title>
 </head>
 <body>
-<div class="container col-4">
-    Amount:
-    <label class="form-check-label card-text" th:text="${transaction.amount}"></label>
-    <br/>
-    Timestamp:
-    <label class="form-check-label card-text" th:text="${transaction.timestamp}"></label>
-    <form id="seller_register_form">
-        <div class="form-group">
-            <label for="pan">Payment Card Number</label>
-            <input type="number" class="form-control" id="pan" name="pan">
-            <label for="ccv">Security Code</label>
-            <input type="number" class="form-control" id="ccv" name="ccv">
-            <label for="date">Expiration Date</label>
-            <input type="date" class="form-control" id="date" name="date">
-            <label for="name">Cardholder Name</label>
-            <input type="text" class="form-control" id="name" name="name">
-            <input hidden th:value="${transaction.id}" id="id">
+<div class="container-fluid">
+    <div class="justify-content-center mt-3">
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Item:</b></label>
+            <label class="col-1" th:text="${transaction.item}"></label>
         </div>
-        <button type="submit" id="submit_btn" class="btn btn-primary btn-block">Submit</button>
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Amount:</b></label>
+            <label class="col-1" th:text="${transaction.amount}"></label>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <label class="col-1" for="pan"><b>Description:</b></label>
+            <label class="col-1" th:text="${transaction.description}"></label>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <h1 class="display-4 my-4">Please enter your card details</h1>
+    </div>
+    <form id="acquirer_form" class="mt-3">
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="pan">Payment Card Number</label>
+            <input type="number" class="col-6 form-control" id="pan" name="pan">
+        </div>
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="ccv">Security Code</label>
+            <input type="number" class="col-6 form-control" id="ccv" name="ccv">
+        </div>
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="date">Expiration Date</label>
+            <input type="date" class="col-6 form-control" id="date" name="date">
+        </div>
+        <div class="form-group row justify-content-center">
+            <label class="col-1" for="name">Cardholder Name</label>
+            <input type="text" class="col-6 form-control" id="name" name="name">
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-1"></div>
+            <button type="submit" id="submit_btn" class="btn btn-primary col-6">Submit</button>
+        </div>
+        <input hidden th:value="${transaction.id}" id="id">
+        <input hidden th:value="${transaction.cardId}" id="cardId">
     </form>
 </div>
 
