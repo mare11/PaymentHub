@@ -15,6 +15,8 @@ import javax.net.ssl.SSLContext;
 @Configuration
 public class SellerConfig {
 
+    @Value("${spring.application.name}")
+    private String applicationName;
     @Value("${server.ssl.trust-store}")
     private Resource trustStore;
     @Value("${server.ssl.trust-store-password}")
@@ -25,7 +27,7 @@ public class SellerConfig {
     public DiscoveryClient.DiscoveryClientOptionalArgs discoveryClientOptionalArgs() {
         DiscoveryClient.DiscoveryClientOptionalArgs args = new DiscoveryClient.DiscoveryClientOptionalArgs();
         EurekaJerseyClientImpl.EurekaJerseyClientBuilder builder = new EurekaJerseyClientImpl.EurekaJerseyClientBuilder();
-        builder.withClientName("paypal-service");
+        builder.withClientName(applicationName);
         builder.withCustomSSL(this.sslContext());
         builder.withMaxTotalConnections(10);
         builder.withMaxConnectionsPerHost(10);

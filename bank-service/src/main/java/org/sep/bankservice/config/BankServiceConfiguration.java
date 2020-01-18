@@ -20,6 +20,8 @@ import javax.net.ssl.SSLContext;
 @Configuration
 public class BankServiceConfiguration {
 
+    @Value("${spring.application.name}")
+    private String applicationName;
     @Value("${server.ssl.trust-store}")
     private Resource trustStore;
     @Value("${server.ssl.trust-store-password}")
@@ -28,14 +30,14 @@ public class BankServiceConfiguration {
     @Bean
     @SneakyThrows
     public RestTemplate restTemplate() {
-        SSLContext sslContext = new SSLContextBuilder()
+        final SSLContext sslContext = new SSLContextBuilder()
                 .loadTrustMaterial(this.trustStore.getURL(), this.trustStorePassword.toCharArray())
                 .build();
-        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
-        HttpClient httpClient = HttpClients.custom()
+        final SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+        final HttpClient httpClient = HttpClients.custom()
                 .setSSLSocketFactory(socketFactory)
                 .build();
-        HttpComponentsClientHttpRequestFactory factory =
+        final HttpComponentsClientHttpRequestFactory factory =
                 new HttpComponentsClientHttpRequestFactory(httpClient);
         return new RestTemplate(factory);
     }
@@ -43,9 +45,9 @@ public class BankServiceConfiguration {
     @Bean
     @SneakyThrows
     public DiscoveryClient.DiscoveryClientOptionalArgs discoveryClientOptionalArgs() {
-        DiscoveryClient.DiscoveryClientOptionalArgs args = new DiscoveryClient.DiscoveryClientOptionalArgs();
-        EurekaJerseyClientImpl.EurekaJerseyClientBuilder builder = new EurekaJerseyClientImpl.EurekaJerseyClientBuilder();
-        builder.withClientName("bank-service");
+        final DiscoveryClient.DiscoveryClientOptionalArgs args = new DiscoveryClient.DiscoveryClientOptionalArgs();
+        final EurekaJerseyClientImpl.EurekaJerseyClientBuilder builder = new EurekaJerseyClientImpl.EurekaJerseyClientBuilder();
+        builder.withClientName(this.applicationName);
         builder.withCustomSSL(this.sslContext());
         builder.withMaxTotalConnections(10);
         builder.withMaxConnectionsPerHost(10);

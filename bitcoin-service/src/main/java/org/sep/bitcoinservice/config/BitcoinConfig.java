@@ -15,6 +15,8 @@ import javax.net.ssl.SSLContext;
 @Configuration
 public class BitcoinConfig {
 
+    @Value("${spring.application.name}")
+    private String applicationName;
     @Value("${server.ssl.trust-store}")
     private Resource trustStore;
     @Value("${server.ssl.trust-store-password}")
@@ -23,9 +25,9 @@ public class BitcoinConfig {
     @Bean
     @SneakyThrows
     public DiscoveryClient.DiscoveryClientOptionalArgs discoveryClientOptionalArgs() {
-        DiscoveryClient.DiscoveryClientOptionalArgs args = new DiscoveryClient.DiscoveryClientOptionalArgs();
-        EurekaJerseyClientImpl.EurekaJerseyClientBuilder builder = new EurekaJerseyClientImpl.EurekaJerseyClientBuilder();
-        builder.withClientName("bitcoin-service");
+        final DiscoveryClient.DiscoveryClientOptionalArgs args = new DiscoveryClient.DiscoveryClientOptionalArgs();
+        final EurekaJerseyClientImpl.EurekaJerseyClientBuilder builder = new EurekaJerseyClientImpl.EurekaJerseyClientBuilder();
+        builder.withClientName(this.applicationName);
         builder.withCustomSSL(this.sslContext());
         builder.withMaxTotalConnections(10);
         builder.withMaxConnectionsPerHost(10);
