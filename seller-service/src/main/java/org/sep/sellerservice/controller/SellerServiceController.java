@@ -24,11 +24,11 @@ import java.util.List;
 @RequestMapping("/api")
 public class SellerServiceController implements SellerServiceApi {
 
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${frontend-port}")
-    private String SERVER_PORT;
+    private String FRONTEND_PORT;
     private final SellerService sellerService;
     private final PaymentService paymentService;
 
@@ -42,7 +42,7 @@ public class SellerServiceController implements SellerServiceApi {
     public ResponseEntity<SellerRegistrationResponse> registerSeller(SellerRegistrationRequest sellerRegistrationRequest) {
         SellerDto seller = this.sellerService.save(sellerRegistrationRequest);
         SellerRegistrationResponse sellerRegistrationResponse = SellerRegistrationResponse.builder()
-                .redirectionUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/seller/" + seller.getId())
+                .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/seller/" + seller.getId())
                 .build();
         return ResponseEntity.ok(sellerRegistrationResponse);
     }
@@ -51,7 +51,7 @@ public class SellerServiceController implements SellerServiceApi {
     public ResponseEntity<PaymentResponse> preparePayment(PaymentRequest paymentRequest) {
         Long paymentId = this.paymentService.preparePayment(paymentRequest);
         PaymentResponse paymentResponse = PaymentResponse.builder()
-                .paymentUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/payment/" + paymentId)
+                .paymentUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/payment/" + paymentId)
                 .build();
         return ResponseEntity.ok(paymentResponse);
     }
