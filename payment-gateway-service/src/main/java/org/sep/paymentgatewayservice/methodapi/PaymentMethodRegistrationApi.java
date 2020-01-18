@@ -1,12 +1,14 @@
 package org.sep.paymentgatewayservice.methodapi;
 
+import org.sep.paymentgatewayservice.payment.entity.FeignConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(value = "payment-gateway-service")
+@FeignClient(value = "https://localhost:8082", configuration = FeignConfiguration.class)
+//@FeignClient(value = "payment-gateway-service", configuration = FeignConfiguration.class)
 public interface PaymentMethodRegistrationApi {
 
     @PostMapping(value = "/payment_method_registration", consumes = MediaType.APPLICATION_JSON_VALUE)

@@ -27,7 +27,7 @@ public class AcquirerServiceImpl implements AcquirerService {
     private final TransactionRepository transactionRepository;
     private final CardRepository cardRepository;
     private final ModelMapper modelMapper;
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTP_PREFIX = "https://";
     private static final String URL_POSTFIX = "/transaction/";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;

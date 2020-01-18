@@ -2,6 +2,7 @@ package org.sep.sellerservice.api;
 
 import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
 import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
+import org.sep.paymentgatewayservice.payment.entity.FeignConfiguration;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(value = "seller-service/api")
+@FeignClient(value = "https://localhost:8081/api", configuration = FeignConfiguration.class)
 public interface SellerServiceApi {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

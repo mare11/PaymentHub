@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String SERBIAN_LOCALE = "en-RS";
     private static final String APPROVE_REL = "approve";
     private static final String PREFER_HEADER = "return=representation";
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTP_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
@@ -51,12 +52,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
+    private final SSLContext sslContext;
 
     @Autowired
-    public PaymentServiceImpl(final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, final PaymentTransactionRepository paymentTransactionRepository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
+    public PaymentServiceImpl(final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository, final PaymentTransactionRepository paymentTransactionRepository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi, final SSLContext sslContext) {
         this.merchantPaymentDetailsRepository = merchantPaymentDetailsRepository;
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
+        this.sslContext = sslContext;
     }
 
     @Override
@@ -220,6 +223,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private Order sendRequest(final HttpRequest<Order> request, final MerchantPaymentDetails merchantPaymentDetails) {
         final PayPalHttpClient httpClient = this.getHttpClient(merchantPaymentDetails);
+        httpClient.setSSLSocketFactory(this.sslContext.getSocketFactory());
 
         Order order = null;
         try {

@@ -34,7 +34,7 @@ import static org.sep.bankservice.model.TransactionStatus.*;
 public class BankServiceImpl implements BankService {
 
     private static final String ACQUIRER_URL = "localhost:9991/prepare";
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
@@ -66,13 +66,13 @@ public class BankServiceImpl implements BankService {
                 .item(paymentRequest.getItem())
                 .amount(paymentRequest.getPrice())
                 .description(paymentRequest.getDescription())
-                .successUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=")
-                .errorUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=")
+                .successUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=")
+                .errorUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=")
                 .build();
 
         log.info("Sending request (merchantId: {}, item: {}) to acquirer", merchant.getMerchantId(), paymentRequest.getItem());
         HttpEntity<TransactionRequest> requestEntity = new HttpEntity<>(transactionRequest);
-        ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(HTTP_PREFIX + ACQUIRER_URL,
+        ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(HTTPS_PREFIX + ACQUIRER_URL,
                 HttpMethod.POST, requestEntity, TransactionResponse.class);
 
         TransactionResponse response = responseEntity.getBody();
@@ -120,7 +120,7 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public String retrieveSellerRegistrationUrl(String issn) {
-        return HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
+        return HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
     }
 
     @Override
