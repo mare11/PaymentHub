@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(value = "https://localhost:8081/api", configuration = FeignConfiguration.class)
+@FeignClient(value = "seller-service/api", configuration = FeignConfiguration.class)
 public interface SellerServiceApi {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

@@ -8,7 +8,6 @@ import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.sellerservice.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -20,8 +19,6 @@ import java.util.stream.Stream;
 @Service
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
-    @Value("${eureka.instance.hostname}")
-    private String HOSTNAME;
     private static final String HTTPS_PREFIX = "https://";
     private final SellerServiceApi sellerServiceApi;
     private final PaymentMethodServiceApi paymentMethodServiceApi;
@@ -60,8 +57,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     private URI generateBaseUri(final PaymentMethodData paymentMethodData) {
-        return URI.create(HTTPS_PREFIX + this.HOSTNAME + ":" + paymentMethodData.getPort());
-//        return URI.create(HTTPS_PREFIX + paymentMethodData.getServiceName() + ":" + paymentMethodData.getPort());
+        return URI.create(HTTPS_PREFIX + paymentMethodData.getServiceName() + ":" + paymentMethodData.getPort());
     }
 
     @Override

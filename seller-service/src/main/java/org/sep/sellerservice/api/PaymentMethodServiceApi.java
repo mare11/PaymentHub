@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(value = "https://localhost:8081/api/payment_method", configuration = FeignConfiguration.class)
+@FeignClient(value = "seller-service/api/payment_method", configuration = FeignConfiguration.class)
 public interface PaymentMethodServiceApi {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

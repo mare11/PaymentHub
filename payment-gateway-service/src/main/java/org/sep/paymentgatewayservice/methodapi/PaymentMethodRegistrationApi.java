@@ -7,8 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(value = "https://localhost:8082", configuration = FeignConfiguration.class)
-//@FeignClient(value = "payment-gateway-service", configuration = FeignConfiguration.class)
+@FeignClient(value = "payment-gateway-service", configuration = FeignConfiguration.class)
 public interface PaymentMethodRegistrationApi {
 
     @PostMapping(value = "/payment_method_registration", consumes = MediaType.APPLICATION_JSON_VALUE)
