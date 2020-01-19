@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class BitcoinServiceImpl implements BitcoinService {
 
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
@@ -55,8 +55,8 @@ public class BitcoinServiceImpl implements BitcoinService {
                     .receive_currency("DO_NOT_CONVERT")
                     .title(paymentRequest.getSellerName() + " : " + paymentRequest.getItem())
                     .description(paymentRequest.getDescription())
-                    .success_url(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=" + transactionId.getId())
-                    .cancel_url(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=" + transactionId.getId())
+                    .success_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=" + transactionId.getId())
+                    .cancel_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=" + transactionId.getId())
                     .order_id(transactionId.getId())
                     .build();
 
@@ -126,7 +126,7 @@ public class BitcoinServiceImpl implements BitcoinService {
     @Override
     public String retrieveSellerRegistrationUrl(final String issn) {
         log.info("Bitcoin registration page is sent");
-        return HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
+        return HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
     }
 
     @Override

@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @Service
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
-    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
     private final SellerServiceApi sellerServiceApi;
     private final PaymentMethodServiceApi paymentMethodServiceApi;
     private final PaymentMethodApi paymentMethodApi;
@@ -27,7 +27,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private final Map<String, SellerPaymentMethods> sellerRegistrationMap;
 
     @Autowired
-    public PaymentGatewayServiceImpl(SellerServiceApi sellerServiceApi, PaymentMethodServiceApi paymentMethodServiceApi, PaymentMethodApi paymentMethodApi, Map<String, PaymentMethodData> paymentMethodDataMap, Map<String, SellerPaymentMethods> sellerRegistrationMap) {
+    public PaymentGatewayServiceImpl(final SellerServiceApi sellerServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, SellerPaymentMethods> sellerRegistrationMap) {
         this.sellerServiceApi = sellerServiceApi;
         this.paymentMethodServiceApi = paymentMethodServiceApi;
         this.paymentMethodApi = paymentMethodApi;
@@ -36,32 +36,32 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public PaymentResponse preparePayment(PaymentRequest paymentRequest) {
+    public PaymentResponse preparePayment(final PaymentRequest paymentRequest) {
         log.info("Call seller service to prepare payment");
         return this.sellerServiceApi.preparePayment(paymentRequest).getBody();
     }
 
     @Override
-    public PaymentResponse createPayment(PaymentRequest paymentRequest) throws NoPaymentMethodFoundException {
-        PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentRequest.getMethod());
+    public PaymentResponse createPayment(final PaymentRequest paymentRequest) throws NoPaymentMethodFoundException {
+        final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentRequest.getMethod());
 
-        if (paymentMethodData == null){
+        if (paymentMethodData == null) {
             log.error("Payment method not found");
             throw new NoPaymentMethodFoundException(paymentRequest.getMethod());
         }
 
-        URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
+        final URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
 
         log.info("Payment request sent to {} payment method from gateway", paymentMethodData.getName());
         return this.paymentMethodApi.createPayment(serviceBaseUri, paymentRequest).getBody();
     }
 
-    private URI generateBaseUri(PaymentMethodData paymentMethodData) {
-        return URI.create(HTTP_PREFIX + paymentMethodData.getServiceName() + ":" + paymentMethodData.getPort());
+    private URI generateBaseUri(final PaymentMethodData paymentMethodData) {
+        return URI.create(HTTPS_PREFIX + paymentMethodData.getServiceName() + ":" + paymentMethodData.getPort());
     }
 
     @Override
-    public void registerPaymentMethod(PaymentMethodData paymentMethodData) {
+    public void registerPaymentMethod(final PaymentMethodData paymentMethodData) {
         Assert.notNull(paymentMethodData, "Payment method data object can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentMethodData.getServiceName(),
@@ -77,7 +77,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 paymentMethodData.getServiceName(),
                 paymentMethodData.getPort());
 
-        PaymentMethod paymentMethod = PaymentMethod.builder()
+        final PaymentMethod paymentMethod = PaymentMethod.builder()
                 .name(paymentMethodData.getName())
                 .build();
 
@@ -87,7 +87,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public String registerSellerInPaymentMethod(SellerPaymentMethods sellerPaymentMethods) throws SellerAlreadyExistsException {
+    public String registerSellerInPaymentMethod(final SellerPaymentMethods sellerPaymentMethods) throws SellerAlreadyExistsException {
         Assert.notNull(sellerPaymentMethods, "Seller payment methods object can't be null!");
         Assert.noNullElements(
                 Stream.of(sellerPaymentMethods.getSellerIssn(),
@@ -103,14 +103,14 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public String proceedToNextPaymentMethod(String sellerIssn) {
+    public String proceedToNextPaymentMethod(final String sellerIssn) {
         Assert.notNull(sellerIssn, "Seller issn can't be null!");
         log.info("Move on to next payment method or end process if there are no payment methods left...");
         return this.registerSeller(sellerIssn);
     }
 
-    private String registerSeller(String sellerIssn) {
-        SellerPaymentMethods sellerPaymentMethods = this.sellerRegistrationMap.get(sellerIssn);
+    private String registerSeller(final String sellerIssn) {
+        final SellerPaymentMethods sellerPaymentMethods = this.sellerRegistrationMap.get(sellerIssn);
 
         String returnUrl = null;
         if (sellerPaymentMethods.getPaymentMethods().isEmpty()) {
@@ -118,10 +118,10 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             this.sellerServiceApi.enableSeller(sellerIssn);
             returnUrl = sellerPaymentMethods.getReturnUrl();
         } else {
-            PaymentMethod paymentMethod = sellerPaymentMethods.getPaymentMethods().get(0);
+            final PaymentMethod paymentMethod = sellerPaymentMethods.getPaymentMethods().get(0);
 
-            PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentMethod.getName());
-            URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
+            final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentMethod.getName());
+            final URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
 
             log.info("Send registration request for method named '{}'...", paymentMethod.getName());
             returnUrl = this.paymentMethodApi.retrieveSellerRegistrationUrl(serviceBaseUri, sellerIssn).getBody();

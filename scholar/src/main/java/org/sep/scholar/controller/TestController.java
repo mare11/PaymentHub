@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 public class TestController {
 
     private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${server.port}")
@@ -32,13 +33,13 @@ public class TestController {
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SellerRegistrationResponse> registerSeller(@RequestBody SellerRegistrationRequest sellerRegistrationRequest) {
         sellerRegistrationRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
-        return this.restTemplate.postForEntity(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/register", sellerRegistrationRequest, SellerRegistrationResponse.class);
+        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/register", sellerRegistrationRequest, SellerRegistrationResponse.class);
     }
 
     @PostMapping(value = "/prepare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentResponse> preparePayment(@RequestBody PaymentRequest paymentRequest) {
         paymentRequest.setSellerIssn("12345678");
         paymentRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
-        return this.restTemplate.postForEntity(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/prepare", paymentRequest, PaymentResponse.class);
+        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/prepare", paymentRequest, PaymentResponse.class);
     }
 }

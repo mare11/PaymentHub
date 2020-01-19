@@ -1,23 +1,19 @@
-package org.sep.paymentgatewayservice.config;
+package org.sep.bitcoinservice.config;
 
 import com.netflix.discovery.DiscoveryClient;
 import com.netflix.discovery.shared.transport.jersey.EurekaJerseyClientImpl;
 import lombok.SneakyThrows;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
-import org.sep.sellerservice.api.SellerPaymentMethods;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import javax.net.ssl.SSLContext;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
-public class GatewayConfig {
+public class BitcoinConfig {
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -25,16 +21,6 @@ public class GatewayConfig {
     private Resource trustStore;
     @Value("${server.ssl.trust-store-password}")
     private String trustStorePassword;
-
-    @Bean
-    public Map<String, PaymentMethodData> paymentMethodDataMap() {
-        return new HashMap<>();
-    }
-
-    @Bean
-    public Map<String, SellerPaymentMethods> sellerRegistrationMap() {
-        return new HashMap<>();
-    }
 
     @Bean
     @SneakyThrows
