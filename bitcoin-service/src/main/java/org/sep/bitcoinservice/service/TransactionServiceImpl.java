@@ -3,10 +3,12 @@ package org.sep.bitcoinservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.exceptions.NoTransactionFoundException;
 import org.sep.bitcoinservice.model.Transaction;
+import org.sep.bitcoinservice.model.TransactionStatus;
 import org.sep.bitcoinservice.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -33,6 +35,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public List<Transaction> findByStatus(TransactionStatus transactionStatus) {
+        return this.transactionRepository.findAllByStatus(transactionStatus);
+    }
+
+    @Override
     public Transaction save(Transaction transaction) {
         if (Stream.of(transaction, transaction.getMerchant(), transaction.getOrderId(), transaction.getPrice(), transaction.getPriceCurrency(), transaction.getStatus())
                 .anyMatch(Objects::isNull)) {
@@ -40,4 +47,6 @@ public class TransactionServiceImpl implements TransactionService {
         }
         return this.transactionRepository.save(transaction);
     }
+
+
 }

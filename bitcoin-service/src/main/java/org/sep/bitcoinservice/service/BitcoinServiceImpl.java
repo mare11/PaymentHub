@@ -15,9 +15,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -92,9 +95,17 @@ public class BitcoinServiceImpl implements BitcoinService {
             this.transactionService.save(transaction);
             log.info("Transaction (merchant: {}, item: {})  is saved", paymentRequest.getSellerIssn(), paymentRequest.getItem());
 
+            final CGCheckout cgCheckout = CGCheckout.builder()
+                    .pay_currency("BTC")
+                    .build();
+            final HttpEntity<CGCheckout> checkoutRequestEntity = new HttpEntity<>(cgCheckout, headers);
+            log.info("Checkout transaction (cgId: {})", cgResponse.getId());
+            final ResponseEntity<CGResponse> checkoutResponse = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders/" + cgResponse.getId() + "/checkout", HttpMethod.POST, checkoutRequestEntity, CGResponse.class);
+            final CGResponse checkoutCGResponse = checkoutResponse.getBody();
+
             final PaymentResponse paymentMethodResponse = PaymentResponse.builder()
-                    .paymentUrl(cgResponse.getPayment_url())
-                    .orderId(cgResponse.getId().toString())
+                    .paymentUrl(checkoutCGResponse.getPayment_url())
+                    .orderId(checkoutCGResponse.getId().toString())
                     .status(CreatePaymentStatus.CREATED)
                     .build();
             return paymentMethodResponse;
@@ -134,5 +145,32 @@ public class BitcoinServiceImpl implements BitcoinService {
         this.merchantService.save(merchant);
         log.info("Merchant with issn: {} is created", merchant.getIssn());
         return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getIssn()).getBody();
+    }
+
+    @Scheduled(fixedDelay = 30000)
+    public void updateTransaction() {
+        log.info("Start transaction checking");
+        List<Transaction> newTransactions = this.transactionService.findByStatus(TransactionStatus.NEW);
+        for (Transaction transaction : newTransactions){
+            log.info("Check transaction with cgId: {}", transaction.getCgId());
+            final HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Token " + transaction.getMerchant().getToken());
+            final HttpEntity requestEntity = new HttpEntity(headers);
+
+            log.info("Transaction request(cgId: {}) is sent", transaction.getCgId());
+            final ResponseEntity<CGResponse> response = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders/"+ transaction.getCgId(), HttpMethod.GET, requestEntity, CGResponse.class);
+            final CGResponse cgResponse = response.getBody();
+            if (cgResponse.getStatus().equals("paid")){
+                log.info("Transaction (merchant: {}, item: {}) status changed to paid", transaction.getMerchant().getIssn(), transaction.getItem());
+                transaction.setStatus(TransactionStatus.FINISHED);
+                this.transactionService.save(transaction);
+                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getIssn(), transaction.getItem());
+            }else if(cgResponse.getStatus().equals("invalid") || cgResponse.getStatus().equals("expired") || cgResponse.getStatus().equals("canceled")){
+                log.info("Transaction (merchant: {}, item: {}) status changed to canceled", transaction.getMerchant().getIssn(), transaction.getItem());
+                transaction.setStatus(TransactionStatus.CANCELED);
+                this.transactionService.save(transaction);
+                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getIssn(), transaction.getItem());
+            }
+        }
     }
 }
