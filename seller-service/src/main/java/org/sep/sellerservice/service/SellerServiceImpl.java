@@ -2,10 +2,10 @@ package org.sep.sellerservice.service;
 
 import org.modelmapper.ModelMapper;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
-import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
-import org.sep.sellerservice.api.PaymentMethod;
-import org.sep.sellerservice.api.SellerAlreadyExistsException;
-import org.sep.sellerservice.api.SellerPaymentMethods;
+import org.sep.paymentgatewayservice.api.SellerRequest;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
+import org.sep.paymentgatewayservice.seller.api.SellerAlreadyExistsException;
+import org.sep.paymentgatewayservice.seller.api.SellerPaymentMethods;
 import org.sep.sellerservice.dto.SellerDto;
 import org.sep.sellerservice.dto.SellerPaymentMethodsDto;
 import org.sep.sellerservice.exceptions.NoChosenPaymentMethodException;
@@ -31,34 +31,34 @@ public class SellerServiceImpl implements SellerService {
     private final ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
-    public SellerServiceImpl(SellerRepository sellerRepository, PaymentMethodRepository paymentMethodRepository, PaymentGatewayServiceApi paymentGatewayServiceApi) {
+    public SellerServiceImpl(final SellerRepository sellerRepository, final PaymentMethodRepository paymentMethodRepository, final PaymentGatewayServiceApi paymentGatewayServiceApi) {
         this.sellerRepository = sellerRepository;
         this.paymentMethodRepository = paymentMethodRepository;
         this.paymentGatewayServiceApi = paymentGatewayServiceApi;
     }
 
     @Override
-    public Seller findById(Long id) {
+    public Seller findById(final Long id) {
         return this.sellerRepository.findById(id).orElse(null);
     }
 
     @Override
-    public SellerDto save(final SellerRegistrationRequest sellerRegistrationRequest) throws SellerAlreadyExistsException {
-        Assert.notNull(sellerRegistrationRequest, "Seller registration object can't be null!");
+    public SellerDto save(final SellerRequest sellerRequest) throws SellerAlreadyExistsException {
+        Assert.notNull(sellerRequest, "Seller registration object can't be null!");
         Assert.noNullElements(
-                Stream.of(sellerRegistrationRequest.getName(),
-                        sellerRegistrationRequest.getIssn(),
-                        sellerRegistrationRequest.getReturnUrl())
+                Stream.of(sellerRequest.getName(),
+                        sellerRequest.getIssn(),
+                        sellerRequest.getReturnUrl())
                         .toArray(),
                 "One or more fields are not specified.");
 
-        if (this.sellerRepository.findByIssn(sellerRegistrationRequest.getIssn()) != null)
-            throw new SellerAlreadyExistsException(sellerRegistrationRequest.getIssn());
+        if (this.sellerRepository.findByIssn(sellerRequest.getIssn()) != null)
+            throw new SellerAlreadyExistsException(sellerRequest.getIssn());
 
         Seller seller = Seller.builder()
-                .name(sellerRegistrationRequest.getName())
-                .issn(sellerRegistrationRequest.getIssn())
-                .returnUrl(sellerRegistrationRequest.getReturnUrl())
+                .name(sellerRequest.getName())
+                .issn(sellerRequest.getIssn())
+                .returnUrl(sellerRequest.getReturnUrl())
                 .enabled(false)
                 .build();
         seller = this.sellerRepository.save(seller);
@@ -97,7 +97,7 @@ public class SellerServiceImpl implements SellerService {
             throw new NoSellerFoundException(sellerPaymentMethodsDto.getSellerId());
         }
 
-        SellerPaymentMethods sellerPaymentMethods = SellerPaymentMethods.builder()
+        final SellerPaymentMethods sellerPaymentMethods = SellerPaymentMethods.builder()
                 .sellerIssn(seller.getIssn())
                 .returnUrl(seller.getReturnUrl())
                 .paymentMethods(sellerPaymentMethodsDto.getPaymentMethods())
@@ -112,10 +112,10 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public List<PaymentMethod> getSellerPaymentMethods(Payment payment) {
+    public List<PaymentMethod> getSellerPaymentMethods(final Payment payment) {
         Assert.notNull(payment, "Payment can't be null!.");
         Assert.notNull(payment.getSeller(), "Seller for payment can't be null.");
-        Seller seller = this.findById(payment.getSeller().getId());
+        final Seller seller = this.findById(payment.getSeller().getId());
         if (seller == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public void enableSeller(String sellerIssn) {
+    public void enableSeller(final String sellerIssn) {
         Assert.notNull(sellerIssn, "Seller issn can't be null.");
 
         final Seller seller = this.sellerRepository.findByIssn(sellerIssn);

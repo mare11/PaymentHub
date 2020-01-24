@@ -2,16 +2,17 @@ package org.sep.paymentgatewayservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.exceptions.NoPaymentMethodFoundException;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
-import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
-import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
-import org.sep.sellerservice.api.*;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
+import org.sep.paymentgatewayservice.method.api.SubscriptionApi;
+import org.sep.paymentgatewayservice.payment.entity.*;
+import org.sep.paymentgatewayservice.seller.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -23,14 +24,16 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private final SellerServiceApi sellerServiceApi;
     private final PaymentMethodServiceApi paymentMethodServiceApi;
     private final PaymentMethodApi paymentMethodApi;
+    private final SubscriptionApi subscriptionApi;
     private final Map<String, PaymentMethodData> paymentMethodDataMap;
     private final Map<String, SellerPaymentMethods> sellerRegistrationMap;
 
     @Autowired
-    public PaymentGatewayServiceImpl(final SellerServiceApi sellerServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, SellerPaymentMethods> sellerRegistrationMap) {
+    public PaymentGatewayServiceImpl(final SellerServiceApi sellerServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final SubscriptionApi subscriptionApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, SellerPaymentMethods> sellerRegistrationMap) {
         this.sellerServiceApi = sellerServiceApi;
         this.paymentMethodServiceApi = paymentMethodServiceApi;
         this.paymentMethodApi = paymentMethodApi;
+        this.subscriptionApi = subscriptionApi;
         this.paymentMethodDataMap = paymentMethodDataMap;
         this.sellerRegistrationMap = sellerRegistrationMap;
     }
@@ -109,10 +112,22 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         return this.registerSeller(sellerIssn);
     }
 
+    @Override
+    public List<SubscriptionPlan> retrieveSubscriptionPlans(final String merchantId) {
+        log.info("Calling paypal service to retrieve subscription plans for merchant with id '{}'", merchantId);
+        return this.subscriptionApi.retrieveSubscriptionPlans(merchantId).getBody();
+    }
+
+    @Override
+    public SubscriptionResponse createSubscription(final SubscriptionRequest subscriptionRequest) {
+        log.info("Calling paypal service to create subscription for plan with id '{}'", subscriptionRequest.getPlanId());
+        return this.subscriptionApi.createSubscription(subscriptionRequest).getBody();
+    }
+
     private String registerSeller(final String sellerIssn) {
         final SellerPaymentMethods sellerPaymentMethods = this.sellerRegistrationMap.get(sellerIssn);
 
-        String returnUrl = null;
+        final String returnUrl;
         if (sellerPaymentMethods.getPaymentMethods().isEmpty()) {
             log.info("No more payment methods left. Go back to seller's site...");
             this.sellerServiceApi.enableSeller(sellerIssn);
@@ -125,7 +140,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
             log.info("Send registration request for method named '{}'...", paymentMethod.getName());
             returnUrl = this.paymentMethodApi.retrieveSellerRegistrationUrl(serviceBaseUri, sellerIssn).getBody();
-            log.info("URL for registration page of method '{}' is retrieved successfuly", paymentMethod.getName());
+            log.info("URL for registration page of method '{}' is retrieved successfully", paymentMethod.getName());
 
             sellerPaymentMethods.getPaymentMethods().remove(0);
         }

@@ -37,9 +37,13 @@ export class PaymentComponent implements OnInit {
 
           window.location.href = paymentResponse.paymentUrl;
         },
-        () => {
-          alert('Failure! Please, try again.');
+        (response) => {
           this.paymentProcessing = false;
+          if (response && response.error) {
+            alert(response.error.message);
+          } else {
+            alert('Failure! Please, try again.');
+          }
         }
       );
     }

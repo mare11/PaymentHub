@@ -1,12 +1,13 @@
 package org.sep.paypalservice;
 
 import lombok.extern.slf4j.Slf4j;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodRegistrationApi;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Slf4j
+@EnableScheduling
 @Component
 public class ApplicationStartupListener implements ApplicationListener<ApplicationReadyEvent> {
 
@@ -25,14 +27,14 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
-    public ApplicationStartupListener(PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
+    public ApplicationStartupListener(final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
         this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
     }
 
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent applicationReadyEvent) {
         log.info("Startup event at: {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(applicationReadyEvent.getTimestamp()), ZoneId.systemDefault()));
-        PaymentMethodData paymentMethodData = PaymentMethodData.builder()
+        final PaymentMethodData paymentMethodData = PaymentMethodData.builder()
                 .name(SERVICE_NAME)
                 .serviceName(this.SERVICE_HOST)
                 .port(Integer.valueOf(this.SERVICE_PORT))
