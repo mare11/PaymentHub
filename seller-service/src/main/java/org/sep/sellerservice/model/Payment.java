@@ -24,10 +24,6 @@ public class Payment {
     @Column(nullable = false)
     private Double price;
 
-    @ManyToOne
-    @JoinColumn(name = "seller_id", nullable = false)
-    private Seller seller;
-
     @Column
     private String priceCurrency;
 
@@ -36,4 +32,8 @@ public class Payment {
 
     @Column(nullable = false)
     private String returnUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Seller seller;
 }

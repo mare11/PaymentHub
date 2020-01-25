@@ -1,7 +1,7 @@
 package org.sep.sellerservice.service;
 
 import org.modelmapper.ModelMapper;
-import org.sep.sellerservice.api.PaymentMethod;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 import org.sep.sellerservice.model.PaymentMethodEntity;
 import org.sep.sellerservice.repository.PaymentMethodRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
         if (this.paymentMethodRepository.findByName(paymentMethod.getName()) != null) return null;
 
-        PaymentMethodEntity paymentMethodEntity = this.paymentMethodRepository.save(this.modelMapper.map(paymentMethod, PaymentMethodEntity.class));
+        final PaymentMethodEntity paymentMethodEntity = this.paymentMethodRepository.save(this.modelMapper.map(paymentMethod, PaymentMethodEntity.class));
         return this.modelMapper.map(paymentMethodEntity, PaymentMethod.class);
     }
 }

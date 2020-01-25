@@ -19,4 +19,9 @@ public class Controller {
     public String testPayment() {
         return "test_payment";
     }
+
+    @GetMapping(value = "/subscription")
+    public String testSubscription() {
+        return "test_subscription";
+    }
 }

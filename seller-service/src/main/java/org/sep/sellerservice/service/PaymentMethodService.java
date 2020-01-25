@@ -1,6 +1,6 @@
 package org.sep.sellerservice.service;
 
-import org.sep.sellerservice.api.PaymentMethod;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 
 import java.util.List;
 

@@ -5,8 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.sep.paypalservice.enums.TransactionStatus;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -32,7 +31,7 @@ public class PaymentTransaction {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
@@ -43,6 +42,9 @@ public class PaymentTransaction {
 
     @Column
     private String item;
+
+    @Column
+    private String description;
 
     @Column(nullable = false)
     private Double value;

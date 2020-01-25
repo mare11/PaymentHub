@@ -1,7 +1,7 @@
 package org.sep.sellerservice.controller;
 
-import org.sep.sellerservice.api.PaymentMethod;
-import org.sep.sellerservice.api.PaymentMethodServiceApi;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethodServiceApi;
 import org.sep.sellerservice.service.PaymentMethodService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -19,7 +19,7 @@ public class PaymentMethodController implements PaymentMethodServiceApi {
     private final PaymentMethodService paymentDataService;
 
     @Autowired
-    public PaymentMethodController(PaymentMethodService paymentDataService) {
+    public PaymentMethodController(final PaymentMethodService paymentDataService) {
         this.paymentDataService = paymentDataService;
     }
 
@@ -33,7 +33,7 @@ public class PaymentMethodController implements PaymentMethodServiceApi {
         try {
             this.paymentDataService.save(paymentMethod);
             return ResponseEntity.ok().build();
-        } catch (DataAccessException e) {
+        } catch (final DataAccessException e) {
             return ResponseEntity.badRequest().build();
         }
     }

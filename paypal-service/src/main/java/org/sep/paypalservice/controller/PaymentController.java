@@ -1,17 +1,16 @@
 package org.sep.paypalservice.controller;
 
-import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
-import org.sep.paypalservice.model.MerchantPaymentDetails;
+import org.sep.paypalservice.dto.RedirectionDto;
+import org.sep.paypalservice.dto.RegistrationDto;
+import org.sep.paypalservice.model.PaymentTransaction;
 import org.sep.paypalservice.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
@@ -21,28 +20,28 @@ public class PaymentController implements PaymentMethodApi {
     private final PaymentService paymentService;
 
     @Autowired
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(final PaymentService paymentService) {
         this.paymentService = paymentService;
     }
 
     @Override
-    public ResponseEntity<PaymentResponse> createPayment(URI baseUrl, PaymentRequest paymentRequest) {
-        PaymentResponse paymentMethodResponse = this.paymentService.createPayment(paymentRequest);
+    public ResponseEntity<PaymentResponse> createPayment(final URI baseUrl, final PaymentRequest paymentRequest) {
+        final PaymentResponse paymentMethodResponse = this.paymentService.createPayment(paymentRequest);
         return ResponseEntity.ok(paymentMethodResponse);
     }
 
     @Override
-    public ResponseEntity<String> completePayment(PaymentCompleteRequest paymentCompleteRequest) {
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<String> retrieveSellerRegistrationUrl(URI baseUrl, String merchantId) {
+    public ResponseEntity<String> retrieveSellerRegistrationUrl(final URI baseUrl, final String merchantId) {
         return ResponseEntity.ok(this.paymentService.retrieveSellerRegistrationUrl(merchantId));
     }
 
     @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerSeller(@RequestBody MerchantPaymentDetails merchantPaymentDetails) {
-        return ResponseEntity.ok(this.paymentService.registerSeller(merchantPaymentDetails));
+    public ResponseEntity<RedirectionDto> registerSeller(@RequestBody final RegistrationDto registrationDto) {
+        return ResponseEntity.ok(RedirectionDto.builder().redirectionUrl(this.paymentService.registerSeller(registrationDto)).build());
+    }
+
+    @GetMapping(value = "/payment_transaction/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PaymentTransaction> getPaymentTransaction(@PathVariable final String orderId) {
+        return ResponseEntity.ok(this.paymentService.findByOrderId(orderId));
     }
 }

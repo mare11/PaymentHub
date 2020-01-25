@@ -1,7 +1,7 @@
 package org.sep.bitcoinservice;
 
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodApi;
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodRegistrationApi;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;

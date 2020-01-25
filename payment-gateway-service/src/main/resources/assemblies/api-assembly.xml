@@ -12,6 +12,7 @@
             <outputDirectory/>
             <includes>
                 <include>org/sep/paymentgatewayservice/api/**/*</include>
+                <include>org/sep/paymentgatewayservice/seller/api/**/*</include>
                 <include>org/sep/paymentgatewayservice/payment/entity/**/*</include>
             </includes>
         </fileSet>

@@ -1,0 +1,25 @@
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="card text-center p-3 w-50">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Choose subscription plan</h2>
+                <form>
+                    <div class="form-group form-check" *ngFor="let plan of plans">
+                        <label>
+                            <input class="form-check-input card-input-element d-none" type="radio" name="plan.planId" [id]="plan.planId" (click)="selectedPlan = plan;">
+                            <div class="card card-body bg-light d-flex flex-row justify-content-between align-items-center">
+                                  <div class="mx-1">Interval: {{plan.intervalUnit}}</div>
+                                  <div class="mx-1">Price: ${{plan.price}}</div>
+                                  <div class="mx-1">Setup Fee: ${{plan.setupFee}}</div>
+                            </div>
+                        </label>
+                    </div>
+                    <button id="submit_btn" type="submit" class="btn btn-primary mt-2" (click)="confirm()" [disabled]="subscriptionProcessing">
+                        {{subscriptionProcessing ? 'Loading' : 'Confirm'}}
+                        <span><img src="assets/images/Spinner-1s-32px.gif" *ngIf="subscriptionProcessing"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

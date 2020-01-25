@@ -37,5 +37,23 @@ $(document).ready(
                 }
             }
         });
-    })
+    }),
+
+    $('#submit_subscription_btn').click(function (event) {
+
+        event.preventDefault();
+
+        $.ajax({
+            url: '/subscription',
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify({"issn": $('#issn').val()}),
+            dataType: 'json',
+            success: function (response) {
+                if (response && response.redirectionUrl) {
+                    window.location.href = response.redirectionUrl;
+                }
+            }
+        });
+    }),
 );

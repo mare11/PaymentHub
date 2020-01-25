@@ -1,8 +1,8 @@
 package org.sep.paymentgatewayservice.controller;
 
-import org.sep.paymentgatewayservice.api.SellerRegistrationRequest;
-import org.sep.paymentgatewayservice.api.SellerRegistrationResponse;
-import org.sep.sellerservice.api.SellerServiceApi;
+import org.sep.paymentgatewayservice.api.RedirectionResponse;
+import org.sep.paymentgatewayservice.api.SellerRequest;
+import org.sep.paymentgatewayservice.seller.api.SellerServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +16,12 @@ public class SellerController {
     private final SellerServiceApi sellerServiceApi;
 
     @Autowired
-    public SellerController(SellerServiceApi sellerServiceApi) {
+    public SellerController(final SellerServiceApi sellerServiceApi) {
         this.sellerServiceApi = sellerServiceApi;
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SellerRegistrationResponse> registerSeller(@RequestBody SellerRegistrationRequest sellerRegistrationRequest) {
-        return this.sellerServiceApi.registerSeller(sellerRegistrationRequest);
+    public ResponseEntity<RedirectionResponse> registerSeller(@RequestBody final SellerRequest sellerRequest) {
+        return this.sellerServiceApi.registerSeller(sellerRequest);
     }
 }

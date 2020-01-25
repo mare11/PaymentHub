@@ -1,20 +1,21 @@
 package org.sep.paypalservice.service;
 
-import org.sep.paymentgatewayservice.methodapi.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
-import org.sep.paypalservice.model.MerchantPaymentDetails;
+import org.sep.paypalservice.dto.RegistrationDto;
 import org.sep.paypalservice.model.PaymentTransaction;
 
 public interface PaymentService {
 
     PaymentResponse createPayment(PaymentRequest paymentMethodRequest);
 
-    String completePayment(PaymentCompleteRequest paymentCompleteRequest);
+    PaymentTransaction updateTransaction(PaymentTransaction paymentTransaction);
 
-    PaymentTransaction update(PaymentTransaction paymentTransaction);
+    PaymentTransaction findByOrderId(String orderId);
 
     String retrieveSellerRegistrationUrl(String merchantId);
 
-    String registerSeller(MerchantPaymentDetails merchantPaymentDetails);
+    String registerSeller(RegistrationDto registrationDto);
+
+    void checkUnfinishedTransactions();
 }
