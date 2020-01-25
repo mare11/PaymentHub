@@ -11,5 +11,5 @@ public interface AcquirerService {
 
     Transaction getTransactionById(String id);
 
-    TransactionResponse executeTransaction(String id, Card card);
+    TransactionResponse submitTransaction(String id, Card card);
 }

@@ -12,7 +12,6 @@ import org.sep.bankservice.repository.TransactionRepository;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
-import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +27,22 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.sep.bankservice.model.TransactionStatus.*;
+import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.CREATED;
+import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.ERROR;
 
 @Slf4j
 @Service
 public class BankServiceImpl implements BankService {
 
-    private static final String ACQUIRER_URL = "localhost:9991/prepare";
-    private static final String HTTPS_PREFIX = "https://";
+    @Value("${acquirer.host}")
+    private String acquirerHost;
+    @Value("${acquirer.port}")
+    private String acquirerPort;
     @Value("${ip.address}")
-    private String SERVER_ADDRESS;
+    private String serverAddress;
     @Value("${server.port}")
-    private String SERVER_PORT;
+    private String serverPort;
+    private static final String HTTPS_PREFIX = "https://";
     private final RestTemplate restTemplate;
     private final MerchantRepository merchantRepository;
     private final TransactionRepository transactionRepository;
@@ -61,32 +65,31 @@ public class BankServiceImpl implements BankService {
         final TransactionRequest transactionRequest = TransactionRequest.builder()
                 .merchantId(merchant.getMerchantId())
                 .merchantPassword(merchant.getMerchantPassword())
-//                .merchantOrderId(orderId)
+                .merchantOrderId("something") // FIXME: need to send this ID from the SB
                 .merchantTimestamp(LocalDateTime.now())
                 .item(paymentRequest.getItem())
                 .amount(paymentRequest.getPrice())
                 .description(paymentRequest.getDescription())
-                .successUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=")
-                .errorUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=")
+                .successUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/success_payment?orderId=")
+                .errorUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/cancel_payment?orderId=")
                 .build();
 
         log.info("Sending request (merchantId: {}, item: {}) to acquirer", merchant.getMerchantId(), paymentRequest.getItem());
         final HttpEntity<TransactionRequest> requestEntity = new HttpEntity<>(transactionRequest);
-        final ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(HTTPS_PREFIX + ACQUIRER_URL,
-                HttpMethod.POST, requestEntity, TransactionResponse.class);
+        final ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(getUrl(), HttpMethod.POST, requestEntity, TransactionResponse.class);
 
         final TransactionResponse response = responseEntity.getBody();
-        if (response == null) {
+        if (response == null || !response.isSuccess()) {
             log.error("Wrong response from acquirer (merchantId: {}, item: {})", merchant.getMerchantId(), paymentRequest.getItem());
             return PaymentResponse.builder()
                     .paymentUrl(paymentRequest.getReturnUrl())
-                    .status(CreatePaymentStatus.ERROR)
+                    .status(ERROR)
                     .build();
         }
 
         log.info("Response from acquirer (paymentId: {}, paymentUrl: {})", response.getPaymentId(), response.getPaymentUrl());
         final Transaction transaction = Transaction.builder()
-                .orderId(response.getPaymentId())
+                .orderId(response.getPaymentId()) // TODO check is this correct
                 .item(paymentRequest.getItem())
                 .status(NEW)
                 .price(paymentRequest.getPrice())
@@ -102,7 +105,7 @@ public class BankServiceImpl implements BankService {
         return PaymentResponse.builder()
                 .orderId(response.getPaymentId())
                 .paymentUrl(response.getPaymentUrl())
-                .status(CreatePaymentStatus.CREATED)
+                .status(CREATED)
                 .build();
     }
 
@@ -119,8 +122,8 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(final String issn) {
-        return HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
+    public String retrieveSellerRegistrationUrl(String issn) {
+        return HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/registration?issn=" + issn;
     }
 
     @Override
@@ -145,4 +148,9 @@ public class BankServiceImpl implements BankService {
         log.info("Found merchant with issn: {}", issn);
         return merchant;
     }
+
+    private String getUrl() {
+        return HTTPS_PREFIX + acquirerHost + ":" + acquirerPort;
+    }
+
 }

@@ -19,9 +19,9 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
 
     private static final String SERVICE_NAME = "Bank";
     @Value("${spring.application.name}")
-    private String SERVICE_HOST;
+    private String serviceHost;
     @Value("${server.port}")
-    private String SERVICE_PORT;
+    private String servicePort;
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
@@ -34,8 +34,8 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
         log.info("Startup event at: {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(applicationReadyEvent.getTimestamp()), ZoneId.systemDefault()));
         final PaymentMethodData paymentMethodData = PaymentMethodData.builder()
                 .name(SERVICE_NAME)
-                .serviceName(this.SERVICE_HOST)
-                .port(Integer.valueOf(this.SERVICE_PORT))
+                .serviceName(this.serviceHost)
+                .port(Integer.valueOf(this.servicePort))
                 .build();
         this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
     }

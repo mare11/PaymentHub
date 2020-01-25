@@ -4,7 +4,6 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +16,7 @@ public class CardEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String pan;
 
     @Column(nullable = false)
@@ -26,7 +25,7 @@ public class CardEntity {
     @Column(nullable = false)
     private LocalDate expirationDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String accountNumber;
 
     @Column(nullable = false)
@@ -44,8 +43,4 @@ public class CardEntity {
     @ManyToOne
     @ToString.Exclude
     private ClientEntity client;
-
-    @OneToMany(mappedBy = "card")
-    @ToString.Exclude
-    private Set<TransactionEntity> transactions;
 }

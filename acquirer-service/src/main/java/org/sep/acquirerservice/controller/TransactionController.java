@@ -27,9 +27,9 @@ public class TransactionController {
     }
 
     @ResponseBody
-    @PostMapping(value = "/execute/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public TransactionResponse executeTransaction(@PathVariable String id, @RequestBody Card card) {
-        return acquirerService.executeTransaction(id, card);
+    @PostMapping(value = "/submit/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public TransactionResponse submitTransaction(@PathVariable String id, @RequestBody Card card) {
+        return acquirerService.submitTransaction(id, card);
     }
 
 

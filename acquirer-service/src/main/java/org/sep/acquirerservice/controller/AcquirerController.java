@@ -19,7 +19,7 @@ public class AcquirerController {
         this.acquirerService = acquirerService;
     }
 
-    @PostMapping(value = "/prepare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public TransactionResponse prepareTransaction(@RequestBody TransactionRequest transactionRequest) {
         return acquirerService.prepareTransaction(transactionRequest);
     }
