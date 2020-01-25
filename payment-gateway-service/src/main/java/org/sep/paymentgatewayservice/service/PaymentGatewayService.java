@@ -1,9 +1,10 @@
 package org.sep.paymentgatewayservice.service;
 
-import org.sep.paymentgatewayservice.methodapi.PaymentMethodData;
-import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
-import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
-import org.sep.sellerservice.api.SellerPaymentMethods;
+import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
+import org.sep.paymentgatewayservice.payment.entity.*;
+import org.sep.paymentgatewayservice.seller.api.SellerPaymentMethods;
+
+import java.util.List;
 
 public interface PaymentGatewayService {
 
@@ -16,4 +17,8 @@ public interface PaymentGatewayService {
     String registerSellerInPaymentMethod(SellerPaymentMethods sellerPaymentMethods);
 
     String proceedToNextPaymentMethod(String sellerIssn);
+
+    List<SubscriptionPlan> retrieveSubscriptionPlans(String merchantId);
+
+    SubscriptionResponse createSubscription(SubscriptionRequest subscriptionRequest);
 }

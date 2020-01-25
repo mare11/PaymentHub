@@ -40,9 +40,13 @@ export class SellerPaymentMethodsComponent implements OnInit {
       (response: any) => {
         window.location.href = response.redirectionUrl;
       },
-      () => {
-        alert('Failure');
+      (response) => {
         this.selectionProcessing = false;
+        if (response && response.error) {
+          alert(response.error.message);
+        } else {
+          alert('Failure! Please, try again.');
+        }
       }
     );
   }
