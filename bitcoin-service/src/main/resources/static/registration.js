@@ -5,7 +5,7 @@ $(document).ready(
 
         var data = JSON.stringify({
             "token": $('#token').val(),
-            "issn": $('#issn').val()
+            "merchantId": $('#merchantId').val()
         });
 
         $.ajax({

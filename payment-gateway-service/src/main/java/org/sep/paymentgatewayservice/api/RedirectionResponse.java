@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class RedirectionResponse {
 
     private String redirectionUrl;
+    private String id;
 }

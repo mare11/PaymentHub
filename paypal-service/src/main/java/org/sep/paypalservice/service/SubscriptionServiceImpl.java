@@ -2,14 +2,20 @@ package org.sep.paypalservice.service;
 
 import com.paypal.orders.ApplicationContext;
 import com.paypal.orders.LinkDescription;
+import com.paypal.orders.Money;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.sep.paymentgatewayservice.payment.entity.CreateSubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paypalservice.dto.CompleteDto;
+import org.sep.paypalservice.dto.RedirectionDto;
+import org.sep.paypalservice.exceptions.NoPlanFoundException;
 import org.sep.paypalservice.exceptions.NoSubscriptionFoundException;
+import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
 import org.sep.paypalservice.model.*;
+import org.sep.paypalservice.repository.PlanEntityRepository;
 import org.sep.paypalservice.repository.SubscriptionTransactionRepository;
 import org.sep.paypalservice.util.PayPalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +24,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,16 +39,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private String SERVER_ADDRESS;
     @Value("${frontend-port}")
     private String FRONTEND_PORT;
+    private static final String INITIAL_PLAN_STATUS = "ACTIVE";
+    private static final String SETUP_FEE_FAILURE_ACTION = "CONTINUE";
+    private static final String TENURE_TYPE = "REGULAR";
     private static final String USER_ACTION = "SUBSCRIBE_NOW";
-    private static final int SCHEDULER_DELAY_IN_SECONDS = 30;
     private final SubscriptionTransactionRepository subscriptionTransactionRepository;
+    private final PlanEntityRepository planEntityRepository;
     private final MerchantPaymentDetailsService merchantPaymentDetailsService;
     private final ModelMapper modelMapper;
     private final PayPalUtil payPalUtil;
 
     @Autowired
-    public SubscriptionServiceImpl(final SubscriptionTransactionRepository subscriptionTransactionRepository, final MerchantPaymentDetailsService merchantPaymentDetailsService, final PayPalUtil payPalUtil) {
+    public SubscriptionServiceImpl(final SubscriptionTransactionRepository subscriptionTransactionRepository, final PlanEntityRepository planEntityRepository, final MerchantPaymentDetailsService merchantPaymentDetailsService, final PayPalUtil payPalUtil) {
         this.subscriptionTransactionRepository = subscriptionTransactionRepository;
+        this.planEntityRepository = planEntityRepository;
         this.merchantPaymentDetailsService = merchantPaymentDetailsService;
         this.payPalUtil = payPalUtil;
         this.modelMapper = new ModelMapper();
@@ -50,7 +62,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public SubscriptionResponse createSubscription(final SubscriptionRequest subscriptionRequest) {
         Assert.notNull(subscriptionRequest, "Subscription request can't be null!");
         Assert.noNullElements(
-                Stream.of(subscriptionRequest.getPlanId(),
+                Stream.of(subscriptionRequest.getId(),
+                        subscriptionRequest.getTotalCycles(),
                         subscriptionRequest.getMerchantId(),
                         subscriptionRequest.getReturnUrl())
                         .toArray(),
@@ -58,7 +71,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsService.findByMerchantId(subscriptionRequest.getMerchantId());
 
-        final SubscriptionsCreateRequest subscriptionsCreateRequest = this.createSubscriptionRequest(subscriptionRequest);
+        final Optional<PlanEntity> planEntityOptional = this.planEntityRepository.findById(subscriptionRequest.getId());
+
+        if (planEntityOptional.isEmpty()) {
+            throw new NoPlanFoundException(subscriptionRequest.getId());
+        }
+
+        final PlanEntity planEntity = planEntityOptional.get();
+
+        final String planId = this.createPlan(planEntity, subscriptionRequest.getTotalCycles(), merchantPaymentDetails);
+
+        final SubscriptionsCreateRequest subscriptionsCreateRequest = this.createSubscriptionRequest(subscriptionRequest, planId);
 
         final Subscription subscription = this.payPalUtil.sendRequest(subscriptionsCreateRequest, merchantPaymentDetails);
 
@@ -66,10 +89,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         log.info("Approve link is retrieved...");
 
         final SubscriptionTransaction subscriptionTransaction = SubscriptionTransaction.builder()
+                .planId(planId)
                 .subscriptionId(subscription.getId())
+                .merchantSubscriptionId("")
                 .status(SubscriptionStatus.valueOf(subscription.getStatus()))
-                .merchantId(merchantPaymentDetails.getMerchantId())
+                .totalCycles(subscriptionRequest.getTotalCycles())
                 .returnUrl(subscriptionRequest.getReturnUrl())
+                .planEntity(planEntity)
                 .build();
 
         this.subscriptionTransactionRepository.save(subscriptionTransaction);
@@ -82,7 +108,62 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
     }
 
-    private SubscriptionsCreateRequest createSubscriptionRequest(final SubscriptionRequest subscriptionRequest) {
+    private String createPlan(final PlanEntity planEntity, final int totalCycles, final MerchantPaymentDetails merchantPaymentDetails) {
+        log.info("Creating plan for plan entity with id '{}', interval unit '{}', interval count {} and total cycles {}",
+                planEntity.getId(),
+                planEntity.getIntervalUnit(),
+                planEntity.getIntervalCount(),
+                totalCycles);
+
+        final PaymentPreferences paymentPreferences = PaymentPreferences.builder()
+                .autoBillOutstanding(true)
+                .setupFeeFailureAction(SETUP_FEE_FAILURE_ACTION)
+                .paymentFailureThreshold(3)
+                .build();
+
+        if (planEntity.getSetupFee() != null && planEntity.getSetupFee() > 0) {
+            final Money money = new Money().currencyCode(PayPalUtil.DEFAULT_CURRENCY).value(String.valueOf(planEntity.getSetupFee()));
+            paymentPreferences.setSetupFee(money);
+        }
+
+        final PricingScheme pricingScheme = PricingScheme.builder()
+                .fixedPrice(new Money().currencyCode(PayPalUtil.DEFAULT_CURRENCY)
+                        .value(String.valueOf(planEntity.getPrice())))
+                .build();
+
+        final Frequency frequency = Frequency.builder()
+                .intervalUnit(planEntity.getIntervalUnit())
+                .intervalCount(planEntity.getIntervalCount())
+                .build();
+
+        final BillingCycle billingCycle = BillingCycle.builder()
+                .pricingScheme(pricingScheme)
+                .frequency(frequency)
+                .tenureType(TENURE_TYPE)
+                .sequence(1)
+                .totalCycles(totalCycles)
+                .build();
+
+        Plan plan = Plan.builder()
+                .productId(planEntity.getProductId())
+                .name("Subscription plan for product with name ".concat(planEntity.getMerchant().getMerchantId()))
+                .status(INITIAL_PLAN_STATUS)
+                .billingCycles(Collections.singletonList(billingCycle))
+                .paymentPreferences(paymentPreferences)
+                .build();
+
+        final CreateRequest<Plan> plansCreateRequest = new PlansCreateRequest()
+                .prefer(PayPalUtil.PREFER_HEADER)
+                .requestBody(plan);
+
+        plan = this.payPalUtil.sendRequest(plansCreateRequest, merchantPaymentDetails);
+
+        log.info("Plan with id '{}' and name '{}' is created successfully", plan.getId(), plan.getName());
+
+        return plan.getId();
+    }
+
+    private SubscriptionsCreateRequest createSubscriptionRequest(final SubscriptionRequest subscriptionRequest, final String planId) {
 
         final ApplicationContext applicationContext = new ApplicationContext()
                 .brandName(subscriptionRequest.getMerchantName() == null ? subscriptionRequest.getMerchantId()
@@ -93,7 +174,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .cancelUrl(PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/cancel_subscription");
 
         final Subscription subscription = Subscription.builder()
-                .planId(subscriptionRequest.getPlanId())
+                .planId(planId)
                 .applicationContext(applicationContext)
                 .build();
 
@@ -120,7 +201,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public SubscriptionTransaction updateTransaction(final SubscriptionTransaction subscriptionTransaction) {
+    public void updateTransaction(final SubscriptionTransaction subscriptionTransaction) {
         Assert.notNull(subscriptionTransaction, "Subscription transaction can't be null!");
 
         if (this.subscriptionTransactionRepository.findById(subscriptionTransaction.getId()).isEmpty()) {
@@ -128,11 +209,36 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             throw new NoSubscriptionFoundException(subscriptionTransaction.getSubscriptionId());
         }
 
-        return this.subscriptionTransactionRepository.save(subscriptionTransaction);
+        this.subscriptionTransactionRepository.save(subscriptionTransaction);
     }
 
     @Override
-    @Scheduled(fixedDelay = SCHEDULER_DELAY_IN_SECONDS * 1000)
+    public RedirectionDto completeSubscriptionTransaction(final CompleteDto completeDto) {
+        Assert.notNull(completeDto, "Complete object can't be null!");
+        Assert.noNullElements(Stream.of(completeDto.getId(), completeDto.getSuccessFlag()).toArray(),
+                "Both subscription id and success flag must be provided!");
+
+        log.info("Activating subscription transaction with id '{}'", completeDto.getId());
+
+        final SubscriptionTransaction subscriptionTransaction = this.findBySubscriptionId(completeDto.getId());
+
+        if (subscriptionTransaction == null) {
+            log.error("Subscription transaction with id '{}' does not exist", completeDto.getId());
+            throw new NoSubscriptionFoundException(completeDto.getId());
+        }
+
+        if (completeDto.getSuccessFlag() && !subscriptionTransaction.getStatus().equals(SubscriptionStatus.ACTIVE)) {
+            subscriptionTransaction.setStatus(SubscriptionStatus.ACTIVE);
+            this.subscriptionTransactionRepository.save(subscriptionTransaction);
+
+            log.info("Subscription transaction with id '{}' is activated successfully", completeDto.getId());
+        }
+
+        return RedirectionDto.builder().redirectionUrl(subscriptionTransaction.getReturnUrl()).build();
+    }
+
+    @Override
+    @Scheduled(initialDelay = PayPalUtil.SCHEDULER_INITIAL_DELAY_IN_SECONDS * 1000, fixedDelay = PayPalUtil.SCHEDULER_DELAY_IN_SECONDS * 1000)
     public void checkUnfinishedTransactions() {
         this.checkTransactionsByStatus(SubscriptionStatus.APPROVAL_PENDING);
         this.checkTransactionsByStatus(SubscriptionStatus.APPROVED);
@@ -145,20 +251,30 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionTransactions.forEach(subscriptionTransaction -> {
             log.info("Checking subscription transaction with subscription id {}...", subscriptionTransaction.getSubscriptionId());
             final SubscriptionsGetRequest subscriptionsGetRequest = new SubscriptionsGetRequest(subscriptionTransaction.getSubscriptionId());
-            final Subscription subscription = this.payPalUtil.sendRequest(subscriptionsGetRequest, this.merchantPaymentDetailsService.findByMerchantId(subscriptionTransaction.getMerchantId()));
-            if (!subscription.getStatus().equals(subscriptionStatus.name())) {
-                log.info("Update status of subscription transaction with subscription id '{}' from {} to {}",
-                        subscriptionTransaction.getSubscriptionId(),
-                        subscriptionStatus.name(),
-                        subscription.getStatus());
-                subscriptionTransaction.setStatus(SubscriptionStatus.valueOf(subscription.getStatus()));
-                this.updateTransaction(subscriptionTransaction);
-                log.info("Status of subscription transaction with subscription id '{}' is successfully updated from {} to {}",
-                        subscriptionTransaction.getSubscriptionId(),
-                        subscriptionStatus.name(),
-                        subscription.getStatus());
+            try {
+                final Subscription subscription = this.payPalUtil.sendRequest(subscriptionsGetRequest, this.merchantPaymentDetailsService.findByMerchantId(subscriptionTransaction.getPlanEntity().getMerchant().getMerchantId()));
+                if (!subscription.getStatus().equals(subscriptionStatus.name())) {
+                    this.updateTransactionStatus(subscriptionTransaction, SubscriptionStatus.valueOf(subscription.getStatus()));
+                }
+            } catch (final RequestCouldNotBeExecutedException e) {
+                log.info("Subscription with id {} could not be found", subscriptionTransaction.getSubscriptionId());
+                this.updateTransactionStatus(subscriptionTransaction, SubscriptionStatus.SUSPENDED);
             }
         });
         log.info("Checking subscription transactions with status {} is completed...", subscriptionStatus.name());
+    }
+
+    private void updateTransactionStatus(final SubscriptionTransaction subscriptionTransaction, final SubscriptionStatus status) {
+        final SubscriptionStatus subscriptionStatusToBeChanged = subscriptionTransaction.getStatus();
+        log.info("Update status of subscription transaction with subscription id '{}' from {} to {}",
+                subscriptionTransaction.getSubscriptionId(),
+                subscriptionStatusToBeChanged.name(),
+                status.name());
+        subscriptionTransaction.setStatus(status);
+        this.updateTransaction(subscriptionTransaction);
+        log.info("Status of subscription transaction with subscription id '{}' is successfully updated from {} to {}",
+                subscriptionTransaction.getSubscriptionId(),
+                subscriptionStatusToBeChanged.name(),
+                status.name());
     }
 }

@@ -1,22 +1,23 @@
 package org.sep.paymentgatewayservice.service;
 
+import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.payment.entity.*;
-import org.sep.paymentgatewayservice.seller.api.SellerPaymentMethods;
+import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 
 import java.util.List;
 
 public interface PaymentGatewayService {
 
-    PaymentResponse preparePayment(PaymentRequest paymentRequest);
+    RedirectionResponse preparePayment(PaymentRequest paymentRequest);
 
     PaymentResponse createPayment(PaymentRequest paymentRequest);
 
     void registerPaymentMethod(PaymentMethodData paymentMethodData);
 
-    String registerSellerInPaymentMethod(SellerPaymentMethods sellerPaymentMethods);
+    String registerMerchantInPaymentMethod(MerchantPaymentMethods merchantPaymentMethods);
 
-    String proceedToNextPaymentMethod(String sellerIssn);
+    String proceedToNextPaymentMethod(String merchantId);
 
     List<SubscriptionPlan> retrieveSubscriptionPlans(String merchantId);
 

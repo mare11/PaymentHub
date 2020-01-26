@@ -7,9 +7,9 @@ import org.sep.sellerservice.model.Payment;
 
 public interface PaymentService {
 
-    Payment findById(Long id);
+    Payment findById(String id);
 
-    Long preparePayment(PaymentRequest paymentRequest);
+    String preparePayment(PaymentRequest paymentRequest);
 
     PaymentResponse proceedPayment(CustomerPaymentDto customerPaymentDto);
 }

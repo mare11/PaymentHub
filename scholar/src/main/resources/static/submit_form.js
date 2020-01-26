@@ -28,12 +28,13 @@ $(document).ready(
             data: JSON.stringify({
                 "item": $('#item').val(),
                 "description": $('#description').val(),
-                "price": $('#price').val()
+                "price": $('#price').val(),
+                "merchantId": $('#merchantId').val()
             }),
             dataType: 'json',
             success: function (response) {
-                if (response && response.paymentUrl) {
-                    window.location.href = response.paymentUrl;
+                if (response && response.redirectionUrl) {
+                    window.location.href = response.redirectionUrl;
                 }
             }
         });

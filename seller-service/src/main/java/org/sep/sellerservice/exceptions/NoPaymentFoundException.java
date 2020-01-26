@@ -8,7 +8,7 @@ public class NoPaymentFoundException extends RuntimeException {
 
     private static final long serialVersionUID = 6768654592606974238L;
 
-    public NoPaymentFoundException(Long id) {
-        super("Payment with id " + id + " is not found.");
+    public NoPaymentFoundException(final String orderId) {
+        super("Payment with order id " + orderId + " is not found.");
     }
 }

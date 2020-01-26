@@ -1,7 +1,7 @@
 package org.sep.bitcoinservice.repository;
 
 import org.sep.bitcoinservice.model.Transaction;
-import org.sep.bitcoinservice.model.TransactionStatus;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    Transaction findByOrderId(Long orderId);
-    List<Transaction> findAllByStatus(TransactionStatus transactionStatus);
+    Transaction findByOrderId(String orderId);
+    List<Transaction> findAllByStatus(MerchantOrderStatus transactionStatus);
 }

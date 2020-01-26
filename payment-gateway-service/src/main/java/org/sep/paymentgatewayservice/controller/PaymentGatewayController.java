@@ -1,10 +1,11 @@
 package org.sep.paymentgatewayservice.controller;
 
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
+import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.payment.entity.*;
-import org.sep.paymentgatewayservice.seller.api.SellerPaymentMethods;
+import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 import org.sep.paymentgatewayservice.service.PaymentGatewayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
-    public ResponseEntity<PaymentResponse> preparePayment(final PaymentRequest paymentRequest) {
+    public ResponseEntity<RedirectionResponse> preparePayment(final PaymentRequest paymentRequest) {
         return ResponseEntity.ok(this.paymentGatewayService.preparePayment(paymentRequest));
     }
 
@@ -33,8 +34,8 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
-    public ResponseEntity<String> registerPaymentMethods(final SellerPaymentMethods sellerPaymentMethods) {
-        return ResponseEntity.ok(this.paymentGatewayService.registerSellerInPaymentMethod(sellerPaymentMethods));
+    public ResponseEntity<String> registerPaymentMethods(final MerchantPaymentMethods merchantPaymentMethods) {
+        return ResponseEntity.ok(this.paymentGatewayService.registerMerchantInPaymentMethod(merchantPaymentMethods));
     }
 
     @Override

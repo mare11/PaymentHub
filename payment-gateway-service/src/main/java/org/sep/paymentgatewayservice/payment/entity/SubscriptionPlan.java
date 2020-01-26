@@ -11,8 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SubscriptionPlan {
 
-    private String planId;
-    private String intervalUnit;
+    private Long id;
+    private String planName;
     private Double price;
     private Double setupFee;
+    private Integer totalCycles;
 }

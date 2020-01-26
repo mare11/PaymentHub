@@ -8,7 +8,7 @@ export class SubscriptionService {
 
   constructor(private http: HttpClient) { }
 
-  retrieveSubscriptionPlans(id: number) {
+  retrieveSubscriptionPlans(id: string) {
     return this.http.get('/api/subscription/' + id);
   }
 

@@ -3,8 +3,8 @@ package org.sep.bitcoinservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.exceptions.NoTransactionFoundException;
 import org.sep.bitcoinservice.model.Transaction;
-import org.sep.bitcoinservice.model.TransactionStatus;
 import org.sep.bitcoinservice.repository.TransactionRepository;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,19 +24,19 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Transaction findByOrderId(Long orderId) {
+    public Transaction findByOrderId(String orderId) {
         Transaction transaction = this.transactionRepository.findByOrderId(orderId);
         if (transaction != null){
             return transaction;
         }else{
-            log.error("Transaction not found");
+            log.error("Transaction with order id: {} not found", orderId);
             throw new NoTransactionFoundException(orderId);
         }
     }
 
     @Override
-    public List<Transaction> findByStatus(TransactionStatus transactionStatus) {
-        return this.transactionRepository.findAllByStatus(transactionStatus);
+    public List<Transaction> findByStatus(MerchantOrderStatus merchantOrderStatus) {
+        return this.transactionRepository.findAllByStatus(merchantOrderStatus);
     }
 
     @Override

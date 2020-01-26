@@ -17,7 +17,7 @@ public class CGResponse {
     private String receive_currency;
     private String receive_amount;
     private String created_at;
-    private Long order_id;
+    private String order_id;
     private String payment_url;
     private String token;
 }

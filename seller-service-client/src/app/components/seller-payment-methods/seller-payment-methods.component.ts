@@ -9,14 +9,14 @@ import { SellerPaymentMethodsService } from 'src/app/services/seller-payment-met
 })
 export class SellerPaymentMethodsComponent implements OnInit {
 
-  sellerId: number;
+  sellerId: string;
   paymentMethods: any[];
   selectionProcessing = false;
 
   constructor(private sellerService: SellerPaymentMethodsService, private route: ActivatedRoute) { }
 
   ngOnInit() {
-    this.sellerId = parseInt(this.route.snapshot.paramMap.get('id'), 10);
+    this.sellerId = this.route.snapshot.paramMap.get('id');
     this.sellerService.getPaymentMethods().subscribe(
       (methods: []) => {
         this.paymentMethods = methods.map((method: any) => {
@@ -29,7 +29,7 @@ export class SellerPaymentMethodsComponent implements OnInit {
   }
 
   confirm() {
-    const sellerPaymentMethods = { sellerId: this.sellerId, paymentMethods: []};
+    const sellerPaymentMethods = { merchantId: this.sellerId, paymentMethods: []};
     sellerPaymentMethods.paymentMethods = this.paymentMethods.filter(method => method.checked)
                                                             .map(method => {
                                                               delete method.checked;

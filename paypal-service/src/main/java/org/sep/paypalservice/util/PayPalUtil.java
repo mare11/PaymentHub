@@ -17,10 +17,13 @@ import java.io.IOException;
 @Slf4j
 public class PayPalUtil {
 
+    public static final String DEFAULT_CURRENCY = "USD";
     public static final String SERBIAN_LOCALE = "en-RS";
     public static final String APPROVE_REL = "approve";
     public static final String PREFER_HEADER = "return=representation";
     public static final String HTTPS_PREFIX = "https://";
+    public static final int SCHEDULER_DELAY_IN_SECONDS = 30;
+    public static final int SCHEDULER_INITIAL_DELAY_IN_SECONDS = 10;
     private final SSLContext sslContext;
 
     @Autowired

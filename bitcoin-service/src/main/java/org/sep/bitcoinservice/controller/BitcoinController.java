@@ -2,6 +2,7 @@ package org.sep.bitcoinservice.controller;
 
 import org.sep.bitcoinservice.model.Merchant;
 import org.sep.bitcoinservice.service.BitcoinService;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
@@ -31,12 +32,17 @@ public class BitcoinController implements PaymentMethodApi {
     }
 
     @Override
-    public ResponseEntity<String> retrieveSellerRegistrationUrl(final URI baseUrl, final String merchantId) {
-        return new ResponseEntity<>(this.bitcoinService.retrieveSellerRegistrationUrl(merchantId), HttpStatus.OK);
+    public ResponseEntity<String> retrieveMerchantRegistrationUrl(final URI baseUrl, String merchantId) {
+        return new ResponseEntity<>(this.bitcoinService.retrieveMerchantRegistrationUrl(merchantId), HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<MerchantOrderStatus> getOrderStatus(final URI baseUrl, String orderId) {
+        return new ResponseEntity<>(this.bitcoinService.getOrderStatus(orderId), HttpStatus.OK);
     }
 
     @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> registerSeller(@RequestBody final Merchant merchant) {
-        return ResponseEntity.ok(this.bitcoinService.registerSeller(merchant));
+        return ResponseEntity.ok(this.bitcoinService.registerMerchant(merchant));
     }
 }

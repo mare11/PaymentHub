@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentResponse {
-    private String orderId;
-    private String paymentUrl;
+    private String redirectionUrl;
     private CreatePaymentStatus status;
 }

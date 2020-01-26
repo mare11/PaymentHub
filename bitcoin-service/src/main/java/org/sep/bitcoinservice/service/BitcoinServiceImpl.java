@@ -2,7 +2,7 @@ package org.sep.bitcoinservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.model.*;
-import org.sep.bitcoinservice.repository.TransactionIdRespository;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
@@ -34,52 +34,42 @@ public class BitcoinServiceImpl implements BitcoinService {
     private final RestTemplate restTemplate;
     private final MerchantService merchantService;
     private final TransactionService transactionService;
-    private final TransactionIdRespository transactionIdRespository;
     private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
 
     @Autowired
-    public BitcoinServiceImpl(final RestTemplate restTemplate, final MerchantService merchantService, final TransactionService transactionService, final TransactionIdRespository transactionIdRespository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
+    public BitcoinServiceImpl(final RestTemplate restTemplate, final MerchantService merchantService, final TransactionService transactionService, final PaymentMethodRegistrationApi paymentMethodRegistrationApi) {
         this.restTemplate = restTemplate;
         this.merchantService = merchantService;
         this.transactionService = transactionService;
-        this.transactionIdRespository = transactionIdRespository;
         this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
     }
 
     @Override
     public PaymentResponse createOrder(final PaymentRequest paymentRequest) {
         try {
-            TransactionId transactionId = new TransactionId();
-            transactionId = this.transactionIdRespository.save(transactionId);
-            log.info("Transaction id is created");
 
             final CGRequest cgRequest = CGRequest.builder()
                     .price_amount(paymentRequest.getPrice())
+                    .price_currency("BTC")
                     .receive_currency("DO_NOT_CONVERT")
-                    .title(paymentRequest.getSellerName() + " : " + paymentRequest.getItem())
+                    .title(paymentRequest.getMerchantName() + " : " + paymentRequest.getItem())
                     .description(paymentRequest.getDescription())
-                    .success_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=" + transactionId.getId())
-                    .cancel_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=" + transactionId.getId())
-                    .order_id(transactionId.getId())
+                    .success_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=" + paymentRequest.getMerchantOrderId())
+                    .cancel_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=" + paymentRequest.getMerchantOrderId())
+                    .order_id(paymentRequest.getMerchantOrderId())
                     .build();
 
-            if (paymentRequest.getPriceCurrency() != null) {
-                cgRequest.setPrice_currency(paymentRequest.getPriceCurrency());
-            } else {
-                cgRequest.setPrice_currency("BTC");
-            }
-
-            final Merchant merchant = this.merchantService.findByIssn(paymentRequest.getSellerIssn());
-            log.info("Merchant with issn:{} is retrieved", merchant.getIssn());
+            final Merchant merchant = this.merchantService.findByMerchantId(paymentRequest.getMerchantId());
+            log.info("Merchant with id:{} is retrieved", merchant.getMerchantId());
 
             final HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Token " + merchant.getToken());
             final HttpEntity<CGRequest> requestEntity = new HttpEntity<>(cgRequest, headers);
 
-            log.info("Payment request(merchant: {}, item: {}) is sent", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            log.info("Payment request(merchant: {}, item: {}) is sent", paymentRequest.getMerchantId(), paymentRequest.getItem());
             final ResponseEntity<CGResponse> response = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders", HttpMethod.POST, requestEntity, CGResponse.class);
             final CGResponse cgResponse = response.getBody();
-            log.info("Payment request (merchant: {}, item: {}) is approved", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            log.info("Payment request (merchant: {}, item: {}) is approved", paymentRequest.getMerchantId(), paymentRequest.getItem());
 
             final Transaction transaction = Transaction.builder()
                     .merchant(merchant)
@@ -89,11 +79,11 @@ public class BitcoinServiceImpl implements BitcoinService {
                     .price(cgResponse.getPrice_amount())
                     .priceCurrency(cgResponse.getPrice_currency())
                     .timestamp(cgResponse.getCreated_at())
-                    .status(TransactionStatus.NEW)
+                    .status(MerchantOrderStatus.IN_PROGRESS)
                     .returnUrl(paymentRequest.getReturnUrl())
                     .build();
             this.transactionService.save(transaction);
-            log.info("Transaction (merchant: {}, item: {})  is saved", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            log.info("Transaction (merchant: {}, item: {})  is saved", paymentRequest.getMerchantId(), paymentRequest.getItem());
 
             final CGCheckout cgCheckout = CGCheckout.builder()
                     .pay_currency("BTC")
@@ -105,12 +95,11 @@ public class BitcoinServiceImpl implements BitcoinService {
 
             final PaymentResponse paymentMethodResponse = PaymentResponse.builder()
                     .paymentUrl(checkoutCGResponse.getPayment_url())
-                    .orderId(checkoutCGResponse.getId().toString())
                     .status(CreatePaymentStatus.CREATED)
                     .build();
             return paymentMethodResponse;
         } catch (final HttpClientErrorException e) {
-            log.error("Payment request (merchant: {}, item: {}) is denied", paymentRequest.getSellerIssn(), paymentRequest.getItem());
+            log.error("Payment request (merchant: {}, item: {}) is denied", paymentRequest.getMerchantId(), paymentRequest.getItem());
             final PaymentResponse paymentMethodResponse = PaymentResponse.builder()
                     .status(CreatePaymentStatus.ERROR)
                     .paymentUrl(paymentRequest.getReturnUrl())
@@ -121,37 +110,43 @@ public class BitcoinServiceImpl implements BitcoinService {
 
     @Override
     public String completePayment(final PaymentCompleteRequest request) {
-        final Transaction transaction = this.transactionService.findByOrderId(Long.parseLong(request.getOrderId()));
+        final Transaction transaction = this.transactionService.findByOrderId(request.getOrderId());
         if (request.getStatus() == PaymentStatus.SUCCESS) {
-            transaction.setStatus(TransactionStatus.FINISHED);
+            transaction.setStatus(MerchantOrderStatus.FINISHED);
             this.transactionService.save(transaction);
-            log.info("Transaction (merchant: {}, item: {}) is finished and updated", transaction.getMerchant().getIssn(), transaction.getItem());
+            log.info("Transaction (merchant: {}, item: {}) is finished and updated", transaction.getMerchant().getMerchantId(), transaction.getItem());
         } else {
-            transaction.setStatus(TransactionStatus.CANCELED);
+            transaction.setStatus(MerchantOrderStatus.CANCELED);
             this.transactionService.save(transaction);
-            log.info("Transaction (merchant: {}, item: {}) is canceled and updated", transaction.getMerchant().getIssn(), transaction.getItem());
+            log.info("Transaction (merchant: {}, item: {}) is canceled and updated", transaction.getMerchant().getMerchantId(), transaction.getItem());
         }
         return transaction.getReturnUrl();
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(final String issn) {
-        log.info("Bitcoin registration page is sent");
-        return HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?issn=" + issn;
+    public MerchantOrderStatus getOrderStatus(String orderId) {
+        Transaction transaction = this.transactionService.findByOrderId(orderId);
+        return transaction.getStatus();
     }
 
     @Override
-    public String registerSeller(final Merchant merchant) {
+    public String retrieveMerchantRegistrationUrl(final String merchantId) {
+        log.info("Bitcoin registration page is sent");
+        return HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/registration?merchantId=" + merchantId;
+    }
+
+    @Override
+    public String registerMerchant(final Merchant merchant) {
         this.merchantService.save(merchant);
-        log.info("Merchant with issn: {} is created", merchant.getIssn());
-        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getIssn()).getBody();
+        log.info("Merchant with id: {} is created", merchant.getMerchantId());
+        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getMerchantId()).getBody();
     }
 
     @Scheduled(fixedDelay = 30000)
     public void updateTransaction() {
         log.info("Start transaction checking");
-        List<Transaction> newTransactions = this.transactionService.findByStatus(TransactionStatus.NEW);
-        for (Transaction transaction : newTransactions){
+        List<Transaction> transactionsInProgress = this.transactionService.findByStatus(MerchantOrderStatus.IN_PROGRESS);
+        for (Transaction transaction : transactionsInProgress){
             log.info("Check transaction with cgId: {}", transaction.getCgId());
             final HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Token " + transaction.getMerchant().getToken());
@@ -161,15 +156,15 @@ public class BitcoinServiceImpl implements BitcoinService {
             final ResponseEntity<CGResponse> response = this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders/"+ transaction.getCgId(), HttpMethod.GET, requestEntity, CGResponse.class);
             final CGResponse cgResponse = response.getBody();
             if (cgResponse.getStatus().equals("paid")){
-                log.info("Transaction (merchant: {}, item: {}) status changed to paid", transaction.getMerchant().getIssn(), transaction.getItem());
-                transaction.setStatus(TransactionStatus.FINISHED);
+                log.info("Transaction (merchant: {}, item: {}) status changed to paid", transaction.getMerchant().getMerchantId(), transaction.getItem());
+                transaction.setStatus(MerchantOrderStatus.FINISHED);
                 this.transactionService.save(transaction);
-                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getIssn(), transaction.getItem());
+                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getMerchantId(), transaction.getItem());
             }else if(cgResponse.getStatus().equals("invalid") || cgResponse.getStatus().equals("expired") || cgResponse.getStatus().equals("canceled")){
-                log.info("Transaction (merchant: {}, item: {}) status changed to canceled", transaction.getMerchant().getIssn(), transaction.getItem());
-                transaction.setStatus(TransactionStatus.CANCELED);
+                log.info("Transaction (merchant: {}, item: {}) status changed to canceled", transaction.getMerchant().getMerchantId(), transaction.getItem());
+                transaction.setStatus(MerchantOrderStatus.CANCELED);
                 this.transactionService.save(transaction);
-                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getIssn(), transaction.getItem());
+                log.info("Transaction (merchant: {}, item: {}) successfully updated", transaction.getMerchant().getMerchantId(), transaction.getItem());
             }
         }
     }

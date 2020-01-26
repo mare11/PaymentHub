@@ -1,9 +1,9 @@
 package org.sep.scholar.controller;
 
+import org.sep.scholar.controller.model.MerchantRequest;
 import org.sep.scholar.controller.model.PaymentRequest;
 import org.sep.scholar.controller.model.PaymentResponse;
 import org.sep.scholar.controller.model.RedirectionResponse;
-import org.sep.scholar.controller.model.SellerRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -31,21 +31,20 @@ public class TestController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionResponse> registerSeller(@RequestBody final SellerRequest sellerRequest) {
-        sellerRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
-        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/register", sellerRequest, RedirectionResponse.class);
+    public ResponseEntity<RedirectionResponse> registerSeller(@RequestBody final MerchantRequest merchantRequest) {
+        merchantRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
+        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/register", merchantRequest, RedirectionResponse.class);
     }
 
     @PostMapping(value = "/prepare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentResponse> preparePayment(@RequestBody final PaymentRequest paymentRequest) {
-        paymentRequest.setSellerIssn("12345678");
         paymentRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
         return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/prepare", paymentRequest, PaymentResponse.class);
     }
 
     @PostMapping(value = "/subscription", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionResponse> subscribe(@RequestBody final SellerRequest sellerRequest) {
-        sellerRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
-        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/subscription", sellerRequest, RedirectionResponse.class);
+    public ResponseEntity<RedirectionResponse> subscribe(@RequestBody final MerchantRequest merchantRequest) {
+        merchantRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
+        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/subscription", merchantRequest, RedirectionResponse.class);
     }
 }

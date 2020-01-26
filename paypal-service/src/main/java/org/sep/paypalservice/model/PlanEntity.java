@@ -20,11 +20,17 @@ PlanEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String planId;
+    @Column(nullable = false)
+    private String productId;
+
+    @Column(nullable = false)
+    private String planName;
 
     @Column(nullable = false)
     private String intervalUnit;
+
+    @Column(nullable = false)
+    private Integer intervalCount;
 
     @Column(nullable = false)
     private Double price;

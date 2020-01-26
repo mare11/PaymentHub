@@ -12,8 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerPaymentMethodsDto {
+public class MerchantPaymentMethodsDto {
 
-    private Long sellerId;
+    private String merchantId;
     private List<PaymentMethod> paymentMethods;
 }

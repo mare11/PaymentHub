@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerRequest {
+public class MerchantRequest {
 
     private String name;
-    private String issn;
+    private String merchantId;
     private String returnUrl;
 }

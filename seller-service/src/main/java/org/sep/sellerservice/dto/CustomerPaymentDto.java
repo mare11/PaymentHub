@@ -12,6 +12,6 @@ import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 @Builder
 public class CustomerPaymentDto {
 
-    private Long paymentId;
+    private String merchantOrderId;
     private PaymentMethod paymentMethod;
 }

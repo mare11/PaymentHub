@@ -1,6 +1,6 @@
 package org.sep.sellerservice.service;
 
-import org.sep.paymentgatewayservice.api.SellerRequest;
+import org.sep.paymentgatewayservice.api.MerchantRequest;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
 import org.sep.sellerservice.dto.CustomerSubscriptionDto;
@@ -10,11 +10,11 @@ import java.util.List;
 
 public interface SubscriptionService {
 
-    Subscription findById(Long id);
+    Subscription findById(String id);
 
-    Long prepareSubscription(SellerRequest sellerRequest);
+    String prepareSubscription(MerchantRequest merchantRequest);
 
-    List<SubscriptionPlan> retrieveSubscriptionPlans(Long id);
+    List<SubscriptionPlan> retrieveSubscriptionPlans(String id);
 
     SubscriptionResponse createSubscription(CustomerSubscriptionDto customerSubscriptionDto);
 }

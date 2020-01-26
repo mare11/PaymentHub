@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -19,14 +20,14 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true, nullable = false)
-    private Long orderId;
+    private String orderId;
     @Column(unique = true, nullable = false)
     private Long cgId;
     @Column
     private String item;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private TransactionStatus status;
+    private MerchantOrderStatus status;
     @Column(nullable = false)
     private String priceCurrency;
     @Column(nullable = false)

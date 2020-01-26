@@ -1,20 +1,19 @@
 package org.sep.sellerservice.controller;
 
+import org.sep.paymentgatewayservice.api.MerchantRequest;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
-import org.sep.paymentgatewayservice.api.SellerRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paymentgatewayservice.seller.api.MerchantServiceApi;
 import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
-import org.sep.paymentgatewayservice.seller.api.SellerServiceApi;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
 import org.sep.sellerservice.dto.CustomerSubscriptionDto;
-import org.sep.sellerservice.dto.SellerDto;
-import org.sep.sellerservice.dto.SellerPaymentMethodsDto;
-import org.sep.sellerservice.model.Payment;
+import org.sep.sellerservice.dto.MerchantPaymentMethodsDto;
+import org.sep.sellerservice.model.Merchant;
+import org.sep.sellerservice.service.MerchantService;
 import org.sep.sellerservice.service.PaymentService;
-import org.sep.sellerservice.service.SellerService;
 import org.sep.sellerservice.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,51 +25,53 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class SellerServiceController implements SellerServiceApi {
+public class MerchantController implements MerchantServiceApi {
 
     private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
     @Value("${frontend-port}")
     private String FRONTEND_PORT;
-    private final SellerService sellerService;
+    private final MerchantService merchantService;
     private final PaymentService paymentService;
     private final SubscriptionService subscriptionService;
 
     @Autowired
-    public SellerServiceController(final SellerService sellerService, final PaymentService paymentService, final SubscriptionService subscriptionService) {
-        this.sellerService = sellerService;
+    public MerchantController(final MerchantService merchantService, final PaymentService paymentService, final SubscriptionService subscriptionService) {
+        this.merchantService = merchantService;
         this.paymentService = paymentService;
         this.subscriptionService = subscriptionService;
     }
 
     @Override
-    public ResponseEntity<RedirectionResponse> registerSeller(final SellerRequest sellerRegistrationRequest) {
-        final SellerDto seller = this.sellerService.save(sellerRegistrationRequest);
+    public ResponseEntity<RedirectionResponse> registerMerchant(final MerchantRequest merchantRequest) {
+        final Merchant merchant = this.merchantService.save(merchantRequest);
         final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
-                .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/seller/" + seller.getId())
+                .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/seller/" + merchant.getId())
+                .id(merchant.getId())
                 .build();
         return ResponseEntity.ok(redirectionResponse);
     }
 
     @Override
-    public ResponseEntity<PaymentResponse> preparePayment(final PaymentRequest paymentRequest) {
-        final Long paymentId = this.paymentService.preparePayment(paymentRequest);
-        final PaymentResponse paymentResponse = PaymentResponse.builder()
-                .paymentUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/payment/" + paymentId)
+    public ResponseEntity<RedirectionResponse> preparePayment(final PaymentRequest paymentRequest) {
+        final String merchantOrderId = this.paymentService.preparePayment(paymentRequest);
+        final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
+                .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/payment/" + merchantOrderId)
+                .id(merchantOrderId)
                 .build();
-        return ResponseEntity.ok(paymentResponse);
+        return ResponseEntity.ok(redirectionResponse);
     }
 
     @Override
-    public ResponseEntity<Void> enableSeller(final String sellerIssn) {
-        this.sellerService.enableSeller(sellerIssn);
+    public ResponseEntity<Void> enableMerchant(final String merchantId) {
+        this.merchantService.enableMerchant(merchantId);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    public ResponseEntity<RedirectionResponse> prepareSubscription(final SellerRequest sellerRequest) {
-        final Long subscriptionId = this.subscriptionService.prepareSubscription(sellerRequest);
+    public ResponseEntity<RedirectionResponse> prepareSubscription(final MerchantRequest merchantRequest) {
+        final String subscriptionId = this.subscriptionService.prepareSubscription(merchantRequest);
         final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
                 .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/subscription/" + subscriptionId)
                 .build();
@@ -78,8 +79,8 @@ public class SellerServiceController implements SellerServiceApi {
     }
 
     @PostMapping(value = "/methods_chosen", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionResponse> chooseMethods(@RequestBody final SellerPaymentMethodsDto sellerPaymentMethodsDto) {
-        return ResponseEntity.ok(RedirectionResponse.builder().redirectionUrl(this.sellerService.addPaymentMethods(sellerPaymentMethodsDto)).build());
+    public ResponseEntity<RedirectionResponse> chooseMethods(@RequestBody final MerchantPaymentMethodsDto merchantPaymentMethodsDto) {
+        return ResponseEntity.ok(RedirectionResponse.builder().redirectionUrl(this.merchantService.addPaymentMethods(merchantPaymentMethodsDto)).build());
     }
 
     @PostMapping(value = "/payment", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -88,13 +89,12 @@ public class SellerServiceController implements SellerServiceApi {
     }
 
     @GetMapping(value = "/methods/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PaymentMethod>> getSellerPaymentMethods(@PathVariable final Long id) {
-        final Payment payment = this.paymentService.findById(id);
-        return ResponseEntity.ok(this.sellerService.getSellerPaymentMethods(payment));
+    public ResponseEntity<List<PaymentMethod>> getSellerPaymentMethods(@PathVariable final String id) {
+        return ResponseEntity.ok(this.merchantService.getSellerPaymentMethods(id));
     }
 
     @GetMapping(value = "/subscription/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable final Long id) {
+    public ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable final String id) {
         return ResponseEntity.ok(this.subscriptionService.retrieveSubscriptionPlans(id));
     }
 

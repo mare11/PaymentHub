@@ -20,9 +20,11 @@ export class SubscriptionCompletedComponent implements OnInit {
 
   ngOnInit() {
     const subscriptionId = this.activatedRouter.snapshot.queryParamMap.get('subscription_id');
-    this.paypalService.getSubscriptionTransaction(subscriptionId).subscribe(
-      (subscriptionTransaction: any) => {
-        this.returnUrl = subscriptionTransaction.returnUrl;
+    const successFlag = this.router.url.startsWith('/success_subscription') ? true : false;
+    const completeDto = {id: subscriptionId, successFlag: successFlag}
+    this.paypalService.completeSubscriptionTransaction(completeDto).subscribe(
+      (redirectionDto: any) => {
+        this.returnUrl = redirectionDto.redirectionUrl;
         console.log(this.router.url);
         if (this.router.url.startsWith('/success_subscription')) {
           this.message = this.successMessage;
