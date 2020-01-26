@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class NoMerchantFoundException extends RuntimeException {
 
-    public NoMerchantFoundException(String issn) {
-        super("Merchant with issn number " + issn + " is not found.");
+    public NoMerchantFoundException(String merchantId) {
+        super("Merchant with id" + merchantId  + " is not found.");
     }
 }

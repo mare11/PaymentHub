@@ -20,8 +20,8 @@ public class ClientSideController {
     }
 
     @GetMapping(value = "/registration")
-    public String registration(@RequestParam("issn") final String issn, final Model model) {
-        model.addAttribute("issn", issn);
+    public String registration(@RequestParam("merchantId") final String merchantId, final Model model) {
+        model.addAttribute("merchantId", merchantId);
         return "registration";
     }
 

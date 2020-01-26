@@ -18,7 +18,7 @@ public class Merchant {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String issn;
+    private String merchantId;
 
     @Column(nullable = false)
     private String token;

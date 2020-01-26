@@ -29,12 +29,12 @@ $(document).ready(
                 "item": $('#item').val(),
                 "description": $('#description').val(),
                 "price": $('#price').val(),
-                "issn": $('#issn').val()
+                "merchantId": $('#merchantId').val()
             }),
             dataType: 'json',
             success: function (response) {
-                if (response && response.paymentUrl) {
-                    window.location.href = response.paymentUrl;
+                if (response && response.redirectionUrl) {
+                    window.location.href = response.redirectionUrl;
                 }
             }
         });

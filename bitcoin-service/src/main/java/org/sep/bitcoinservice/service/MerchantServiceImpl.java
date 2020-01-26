@@ -22,19 +22,19 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    public Merchant findByIssn(String issn) {
-        Merchant merchant = this.merchantRepository.findByIssn(issn);
+    public Merchant findByMerchantId(String merchantId) {
+        Merchant merchant = this.merchantRepository.findByMerchantId(merchantId);
         if (merchant != null) {
             return merchant;
         }else{
-            log.error("Merchant not found");
-            throw new NoMerchantFoundException(issn);
+            log.error("Merchant with id: {} not found", merchantId);
+            throw new NoMerchantFoundException(merchantId);
         }
     }
 
     @Override
     public Merchant save(Merchant merchant) {
-        if (Stream.of(merchant, merchant.getToken(), merchant.getIssn())
+        if (Stream.of(merchant, merchant.getToken(), merchant.getMerchantId())
                 .anyMatch(Objects::isNull)) {
             return null;
         }
