@@ -8,8 +8,8 @@ export class PaypalService {
 
   constructor(private http: HttpClient) { }
 
-  registerSeller(registrationDto: any) {
-    return this.http.post('/api/register_seller', registrationDto);
+  registerMerchant(registrationDto: any) {
+    return this.http.post('/api/register_merchant', registrationDto);
   }
 
   completePaymentTransaction(completeDto: any) {

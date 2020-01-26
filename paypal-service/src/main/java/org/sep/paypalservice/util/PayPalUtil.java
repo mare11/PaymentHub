@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
 import org.sep.paypalservice.model.MerchantPaymentDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
@@ -17,6 +18,10 @@ import java.io.IOException;
 @Slf4j
 public class PayPalUtil {
 
+    @Value("${ip.address}")
+    public String SERVER_ADDRESS;
+    @Value("${frontend-port}")
+    public String FRONTEND_PORT;
     public static final String DEFAULT_CURRENCY = "USD";
     public static final String SERBIAN_LOCALE = "en-RS";
     public static final String APPROVE_REL = "approve";

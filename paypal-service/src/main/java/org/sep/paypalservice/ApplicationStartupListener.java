@@ -36,7 +36,7 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
         log.info("Startup event at: {}", LocalDateTime.ofInstant(Instant.ofEpochMilli(applicationReadyEvent.getTimestamp()), ZoneId.systemDefault()));
         final PaymentMethodData paymentMethodData = PaymentMethodData.builder()
                 .name(SERVICE_NAME)
-                .serviceName(this.SERVICE_HOST)
+                .host(this.SERVICE_HOST)
                 .port(Integer.valueOf(this.SERVICE_PORT))
                 .build();
         this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);

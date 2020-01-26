@@ -2,22 +2,21 @@ package org.sep.paypalservice.service;
 
 import com.paypal.orders.*;
 import lombok.extern.slf4j.Slf4j;
-import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
-import org.sep.paypalservice.dto.RegistrationDto;
 import org.sep.paypalservice.exceptions.NoMerchantFoundException;
 import org.sep.paypalservice.exceptions.NoOrderFoundException;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
-import org.sep.paypalservice.model.*;
+import org.sep.paypalservice.model.MerchantPaymentDetails;
+import org.sep.paypalservice.model.PaymentTransaction;
+import org.sep.paypalservice.model.TransactionStatus;
 import org.sep.paypalservice.repository.PaymentTransactionRepository;
-import org.sep.paypalservice.repository.PlanEntityRepository;
 import org.sep.paypalservice.util.PayPalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -31,26 +30,16 @@ import java.util.stream.Stream;
 @Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
-    @Value("${ip.address}")
-    private String SERVER_ADDRESS;
-    @Value("${frontend-port}")
-    private String FRONTEND_PORT;
     private static final String INTENT = "CAPTURE";
     private static final String ITEM_CATEGORY = "DIGITAL_GOODS";
-    private static final String DIGITAL = "DIGITAL";
-    private static final String MAGAZINES = "MAGAZINES";
     private final MerchantPaymentDetailsService merchantPaymentDetailsService;
     private final PaymentTransactionRepository paymentTransactionRepository;
-    private final PaymentMethodRegistrationApi paymentMethodRegistrationApi;
-    private final PlanEntityRepository planEntityRepository;
     private final PayPalUtil payPalUtil;
 
     @Autowired
-    public PaymentServiceImpl(final MerchantPaymentDetailsService merchantPaymentDetailsService, final PaymentTransactionRepository paymentTransactionRepository, final PaymentMethodRegistrationApi paymentMethodRegistrationApi, final PlanEntityRepository planEntityRepository, final PayPalUtil payPalUtil) {
+    public PaymentServiceImpl(final MerchantPaymentDetailsService merchantPaymentDetailsService, final PaymentTransactionRepository paymentTransactionRepository, final PayPalUtil payPalUtil) {
         this.merchantPaymentDetailsService = merchantPaymentDetailsService;
         this.paymentTransactionRepository = paymentTransactionRepository;
-        this.paymentMethodRegistrationApi = paymentMethodRegistrationApi;
-        this.planEntityRepository = planEntityRepository;
         this.payPalUtil = payPalUtil;
     }
 
@@ -58,13 +47,13 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse createPayment(final PaymentRequest paymentRequest) throws NoMerchantFoundException, RequestCouldNotBeExecutedException {
         Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
-                Stream.of(paymentRequest.getSellerIssn(),
+                Stream.of(paymentRequest.getMerchantId(),
                         paymentRequest.getPrice(),
                         paymentRequest.getReturnUrl())
                         .toArray(),
                 "One or more fields are not specified.");
 
-        final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsService.findByMerchantId(paymentRequest.getSellerIssn());
+        final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsService.findByMerchantId(paymentRequest.getMerchantId());
 
         final OrdersCreateRequest request = this.createOrderRequest(paymentRequest);
         log.info("Request is created...");
@@ -77,8 +66,8 @@ public class PaymentServiceImpl implements PaymentService {
         final PaymentTransaction paymentTransaction = PaymentTransaction.builder()
                 .orderId(order.id())
                 .status(TransactionStatus.valueOf(order.status()))
-                .merchantId(paymentRequest.getSellerIssn())
-                .merchantOrderId("")
+                .merchantId(paymentRequest.getMerchantId())
+                .merchantOrderId(paymentRequest.getMerchantOrderId())
                 .item(order.purchaseUnits().get(0).items().get(0).name())
                 .description(order.purchaseUnits().get(0).items().get(0).description())
                 .value(Double.valueOf(order.purchaseUnits().get(0).amountWithBreakdown().value()))
@@ -91,7 +80,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentResponse.builder()
                 .paymentUrl(approveLink != null ? approveLink.href() : paymentRequest.getReturnUrl())
-                .orderId(order.id())
                 .status(order.status().equals(CreatePaymentStatus.CREATED.name()) ? CreatePaymentStatus.CREATED : CreatePaymentStatus.ERROR)
                 .build();
     }
@@ -99,7 +87,7 @@ public class PaymentServiceImpl implements PaymentService {
     private OrdersCreateRequest createOrderRequest(final PaymentRequest paymentRequest) {
 
         final Money money = new Money()
-                .currencyCode(paymentRequest.getPriceCurrency() == null ? PayPalUtil.DEFAULT_CURRENCY : paymentRequest.getPriceCurrency())
+                .currencyCode(PayPalUtil.DEFAULT_CURRENCY)
                 .value(String.format("%.2f", paymentRequest.getPrice()));
 
         final AmountBreakdown amountBreakdown = new AmountBreakdown().itemTotal(money);
@@ -127,10 +115,10 @@ public class PaymentServiceImpl implements PaymentService {
         purchaseUnitRequests.add(purchaseUnitRequest);
 
         final ApplicationContext applicationContext = new ApplicationContext()
-                .brandName(paymentRequest.getSellerName() == null ? "" : paymentRequest.getSellerName())
+                .brandName(paymentRequest.getMerchantName() == null ? "" : paymentRequest.getMerchantName())
                 .locale(PayPalUtil.SERBIAN_LOCALE)
-                .returnUrl(PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/success_payment")
-                .cancelUrl(PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/cancel_payment");
+                .returnUrl(PayPalUtil.HTTPS_PREFIX + this.payPalUtil.SERVER_ADDRESS + ":" + this.payPalUtil.FRONTEND_PORT + "/success_payment")
+                .cancelUrl(PayPalUtil.HTTPS_PREFIX + this.payPalUtil.SERVER_ADDRESS + ":" + this.payPalUtil.FRONTEND_PORT + "/cancel_payment");
 
         final OrderRequest orderRequest = new OrderRequest()
                 .checkoutPaymentIntent(INTENT)
@@ -161,50 +149,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(final String merchantId) {
-        log.info("Registration page url retrieving...");
-        return PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/registration/" + merchantId;
-    }
-
-    @Override
-    public String registerSeller(final RegistrationDto registrationDto) throws RequestCouldNotBeExecutedException {
-        Assert.notNull(registrationDto, "Registration dto object can't be null!");
-        Assert.noNullElements(
-                Stream.of(registrationDto.getClientId(),
-                        registrationDto.getClientSecret(),
-                        registrationDto.getMerchantId())
-                        .toArray(),
-                "One or more fields are not specified.");
-
-        final MerchantPaymentDetails merchantPaymentDetails = MerchantPaymentDetails.builder()
-                .clientId(registrationDto.getClientId())
-                .clientSecret(registrationDto.getClientSecret())
-                .merchantId(registrationDto.getMerchantId())
-                .build();
-
-        List<PlanEntity> planEntities = new ArrayList<>();
-        if (registrationDto.getSubscription()) {
-            planEntities = this.createPlanEntities(registrationDto, merchantPaymentDetails);
-        }
-
-        this.merchantPaymentDetailsService.save(merchantPaymentDetails);
-        log.info("Merchant payment details are saved into DB...");
-        planEntities.forEach(planEntity -> {
-            planEntity.setMerchant(merchantPaymentDetails);
-            this.planEntityRepository.save(planEntity);
-            log.info("Plan entity with id '{}' and interval unit '{}' and interval count '{}' is saved successfully into DB",
-                    planEntity.getId(),
-                    planEntity.getIntervalUnit(),
-                    planEntity.getIntervalCount());
-        });
-
-        final String returnUrl = this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantPaymentDetails.getMerchantId()).getBody();
-        log.info("Proceeding to next payment method is done successfully...");
-
-        return returnUrl;
-    }
-
-    @Override
     public RedirectionDto completePaymentTransaction(final CompleteDto completeDto) {
         Assert.notNull(completeDto, "Complete object can't be null!");
         Assert.noNullElements(Stream.of(completeDto.getId(), completeDto.getSuccessFlag()).toArray(),
@@ -220,13 +164,40 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if (completeDto.getSuccessFlag() && !paymentTransaction.getStatus().equals(TransactionStatus.COMPLETED)) {
-            paymentTransaction.setStatus(TransactionStatus.COMPLETED);
-            this.paymentTransactionRepository.save(paymentTransaction);
+            final OrdersCaptureRequest captureRequest = new OrdersCaptureRequest(paymentTransaction.getOrderId()).prefer(PayPalUtil.PREFER_HEADER);
+            log.info("Send capture request for payment transaction with order id '{}'", paymentTransaction.getOrderId());
+            final Order order = this.payPalUtil.sendRequest(captureRequest, this.merchantPaymentDetailsService.findByMerchantId(paymentTransaction.getMerchantId()));
+
+            paymentTransaction.setPayerId(order.payer() != null ? order.payer().payerId() : null);
+            paymentTransaction.setPayerName(order.payer() != null && order.payer().name() != null
+                    ? order.payer().name().givenName().concat(" ").concat(order.payer().name().surname())
+                    : null);
+            this.updateTransactionStatus(paymentTransaction, TransactionStatus.COMPLETED);
 
             log.info("Payment transaction with id '{}' is completed successfully", completeDto.getId());
         }
 
         return RedirectionDto.builder().redirectionUrl(paymentTransaction.getReturnUrl()).build();
+    }
+
+    @Override
+    public MerchantOrderStatus getOrderStatus(final String merchantOrderId) {
+        Assert.notNull(merchantOrderId, "Merchant order id can't be null!");
+
+        log.info("Retrieving status of payment transaction with merchant order id '{}'", merchantOrderId);
+        final PaymentTransaction paymentTransaction = this.paymentTransactionRepository.findByMerchantOrderId(merchantOrderId);
+
+        if (paymentTransaction == null) {
+            log.error("Payment transaction with merchant order id '{}' does not exist", merchantOrderId);
+            throw new NoOrderFoundException(merchantOrderId);
+        }
+
+        log.info("Status of payment transaction with merchant order id '{}' is retrieved successfully. Status value: {}",
+                merchantOrderId,
+                paymentTransaction.getStatus().name());
+
+        return paymentTransaction.getStatus().equals(TransactionStatus.COMPLETED) ? MerchantOrderStatus.FINISHED
+                : paymentTransaction.getStatus().equals(TransactionStatus.VOIDED) ? MerchantOrderStatus.CANCELED : MerchantOrderStatus.IN_PROGRESS;
     }
 
     @Override
@@ -272,41 +243,5 @@ public class PaymentServiceImpl implements PaymentService {
         paymentTransaction.setStatus(status);
         this.updateTransaction(paymentTransaction);
         log.info("Status of payment transaction with order id '{}' is successfully updated from {} to {}", paymentTransaction.getOrderId(), statusToBeChanged.name(), status.name());
-    }
-
-    private List<PlanEntity> createPlanEntities(final RegistrationDto registrationDto, final MerchantPaymentDetails merchantPaymentDetails) throws RequestCouldNotBeExecutedException {
-        log.info("Creation of product with name '{}'", registrationDto.getMerchantId());
-        Product product = Product.builder()
-                .name(registrationDto.getMerchantId())
-                .type(DIGITAL)
-                .category(MAGAZINES)
-                .build();
-
-        final CreateRequest<Product> productsCreateRequest = new ProductsCreateRequest()
-                .prefer(PayPalUtil.PREFER_HEADER)
-                .requestBody(product);
-
-        product = this.payPalUtil.sendRequest(productsCreateRequest, merchantPaymentDetails);
-
-        log.info("Product with id '{}' and name '{}' is created successfully", product.getProductId(), product.getName());
-
-        final List<PlanEntity> planEntities = new ArrayList<>();
-
-        final String productId = product.getProductId();
-
-        registrationDto.getPlans().forEach(planDto -> {
-            final PlanEntity planEntity = PlanEntity.builder()
-                    .productId(productId)
-                    .planName(planDto.getPlan())
-                    .intervalUnit(planDto.getIntervalUnit())
-                    .intervalCount(planDto.getIntervalCount())
-                    .price(planDto.getPrice())
-                    .setupFee(registrationDto.getSetupFee())
-                    .build();
-
-            planEntities.add(planEntity);
-        });
-        log.info("Created {} plan entities successfully", planEntities.size());
-        return planEntities;
     }
 }

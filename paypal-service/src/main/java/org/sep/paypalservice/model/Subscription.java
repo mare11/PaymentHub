@@ -25,6 +25,8 @@ public class Subscription {
     private String status;
     @SerializedName("plan_id")
     private String planId;
+    @SerializedName("subscriber")
+    private Subscriber subscriber;
     @SerializedName("application_context")
     private ApplicationContext applicationContext;
     @SerializedName(value = "links", listClass = LinkDescription.class)

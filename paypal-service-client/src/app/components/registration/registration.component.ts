@@ -70,7 +70,7 @@ export class RegistrationComponent implements OnInit {
       });
     }
 
-    this.paypalService.registerSeller(registrationDto).subscribe(
+    this.paypalService.registerMerchant(registrationDto).subscribe(
       (response: any) => {
         window.location.href = response.redirectionUrl;
       },

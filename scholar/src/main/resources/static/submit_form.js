@@ -48,7 +48,7 @@ $(document).ready(
             url: '/subscription',
             type: 'post',
             contentType: 'application/json',
-            data: JSON.stringify({"issn": $('#issn').val()}),
+            data: JSON.stringify({"merchantId": $('#merchantId').val()}),
             dataType: 'json',
             success: function (response) {
                 if (response && response.redirectionUrl) {

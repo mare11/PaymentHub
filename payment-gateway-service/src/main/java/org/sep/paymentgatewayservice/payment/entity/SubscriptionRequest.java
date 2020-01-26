@@ -15,5 +15,6 @@ public class SubscriptionRequest {
     private Integer totalCycles;
     private String merchantName;
     private String merchantId;
+    private String merchantSubscriptionId;
     private String returnUrl;
 }

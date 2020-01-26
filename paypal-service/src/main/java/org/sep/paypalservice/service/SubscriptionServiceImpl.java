@@ -19,7 +19,6 @@ import org.sep.paypalservice.repository.PlanEntityRepository;
 import org.sep.paypalservice.repository.SubscriptionTransactionRepository;
 import org.sep.paypalservice.util.PayPalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -35,10 +34,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    @Value("${ip.address}")
-    private String SERVER_ADDRESS;
-    @Value("${frontend-port}")
-    private String FRONTEND_PORT;
     private static final String INITIAL_PLAN_STATUS = "ACTIVE";
     private static final String SETUP_FEE_FAILURE_ACTION = "CONTINUE";
     private static final String TENURE_TYPE = "REGULAR";
@@ -91,7 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final SubscriptionTransaction subscriptionTransaction = SubscriptionTransaction.builder()
                 .planId(planId)
                 .subscriptionId(subscription.getId())
-                .merchantSubscriptionId("")
+                .merchantSubscriptionId(subscriptionRequest.getMerchantSubscriptionId())
                 .status(SubscriptionStatus.valueOf(subscription.getStatus()))
                 .totalCycles(subscriptionRequest.getTotalCycles())
                 .returnUrl(subscriptionRequest.getReturnUrl())
@@ -170,8 +165,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         : subscriptionRequest.getMerchantName().concat(" (").concat(subscriptionRequest.getMerchantId()).concat(")"))
                 .userAction(USER_ACTION)
                 .locale(PayPalUtil.SERBIAN_LOCALE)
-                .returnUrl(PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/success_subscription")
-                .cancelUrl(PayPalUtil.HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/cancel_subscription");
+                .returnUrl(PayPalUtil.HTTPS_PREFIX + this.payPalUtil.SERVER_ADDRESS + ":" + this.payPalUtil.FRONTEND_PORT + "/success_subscription")
+                .cancelUrl(PayPalUtil.HTTPS_PREFIX + this.payPalUtil.SERVER_ADDRESS + ":" + this.payPalUtil.FRONTEND_PORT + "/cancel_subscription");
 
         final Subscription subscription = Subscription.builder()
                 .planId(planId)
@@ -228,8 +223,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         if (completeDto.getSuccessFlag() && !subscriptionTransaction.getStatus().equals(SubscriptionStatus.ACTIVE)) {
-            subscriptionTransaction.setStatus(SubscriptionStatus.ACTIVE);
-            this.subscriptionTransactionRepository.save(subscriptionTransaction);
+            final SubscriptionsGetRequest subscriptionsGetRequest = new SubscriptionsGetRequest(subscriptionTransaction.getSubscriptionId());
+            final Subscription subscription = this.payPalUtil.sendRequest(subscriptionsGetRequest, this.merchantPaymentDetailsService.findByMerchantId(subscriptionTransaction.getPlanEntity().getMerchant().getMerchantId()));
+
+            subscriptionTransaction.setSubscriberName(subscription.getSubscriber() != null && subscription.getSubscriber().getName() != null
+                    ? subscription.getSubscriber().getName().givenName().concat(" ").concat(subscription.getSubscriber().getName().surname())
+                    : null);
+            this.updateTransactionStatus(subscriptionTransaction, SubscriptionStatus.ACTIVE);
 
             log.info("Subscription transaction with id '{}' is activated successfully", completeDto.getId());
         }

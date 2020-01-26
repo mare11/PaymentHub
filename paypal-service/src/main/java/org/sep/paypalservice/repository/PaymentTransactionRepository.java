@@ -13,4 +13,6 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     PaymentTransaction findByOrderId(String orderId);
 
     List<PaymentTransaction> findAllByStatus(TransactionStatus transactionStatus);
+
+    PaymentTransaction findByMerchantOrderId(String merchantOrderId);
 }

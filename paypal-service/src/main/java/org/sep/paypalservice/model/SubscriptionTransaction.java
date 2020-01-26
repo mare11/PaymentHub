@@ -27,8 +27,11 @@ public class SubscriptionTransaction {
     @Column(nullable = false, unique = true)
     private String subscriptionId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String merchantSubscriptionId;
+
+    @Column
+    private String subscriberName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
