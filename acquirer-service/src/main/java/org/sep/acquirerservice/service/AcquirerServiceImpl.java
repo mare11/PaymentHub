@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.sep.pccservice.api.TransactionStatus.OPEN;
@@ -62,13 +61,13 @@ public class AcquirerServiceImpl implements AcquirerService {
                     .build();
         }
         log.info("Card found (pan: {} and ccv: {}) for merchantId: {}", cardEntity.getPan(), cardEntity.getCcv(), transactionRequest.getMerchantId());
-        String orderId = UUID.randomUUID().toString();
         TransactionEntity transaction = TransactionEntity.builder()
+                .orderId(transactionRequest.getMerchantOrderId())
                 .item(transactionRequest.getItem())
                 .amount(transactionRequest.getAmount())
                 .description(transactionRequest.getDescription())
-                .successUrl(transactionRequest.getSuccessUrl() + orderId)
-                .errorUrl(transactionRequest.getErrorUrl() + orderId)
+                .successUrl(transactionRequest.getSuccessUrl())
+                .errorUrl(transactionRequest.getErrorUrl())
                 .merchantPan(cardEntity.getPan())
                 .status(OPEN)
                 .build();
@@ -78,7 +77,7 @@ public class AcquirerServiceImpl implements AcquirerService {
                 transaction.getItem(), transaction.getAmount(), transaction.getTimestamp(), transactionRequest.getMerchantId());
 
         return TransactionResponse.builder()
-                .paymentId(orderId)
+                .paymentId(transaction.getId())
                 .paymentUrl(HTTP_PREFIX + serverAddress + ":" + serverPort + URL_POSTFIX + transaction.getId())
                 .success(true)
                 .build();
@@ -161,7 +160,7 @@ public class AcquirerServiceImpl implements AcquirerService {
     }
 
     private TransactionEntity getTransactionEntity(String id) {
-        Optional<TransactionEntity> optionalTransaction = transactionRepository.findById(UUID.fromString(id));
+        Optional<TransactionEntity> optionalTransaction = transactionRepository.findById(id);
         if (optionalTransaction.isEmpty()) {
             log.error("No transaction found with id: {}", id);
             throw new TransactionNotFoundException(id);

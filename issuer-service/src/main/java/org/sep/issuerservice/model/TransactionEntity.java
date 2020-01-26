@@ -29,9 +29,6 @@ public class TransactionEntity {
     @Column(precision = 10, scale = 2, nullable = false)
     private Double amount;
 
-    @Column(nullable = false)
-    private String accountNumber;
-
     @CreationTimestamp
     private LocalDateTime timestamp;
 
@@ -41,5 +38,8 @@ public class TransactionEntity {
 
     @Column
     private String description;
+
+    @ManyToOne
+    private CardEntity card;
 
 }

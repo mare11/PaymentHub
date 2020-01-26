@@ -3,12 +3,10 @@ package org.sep.bankservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.bankservice.exception.InvalidDataException;
 import org.sep.bankservice.exception.MerchantNotFoundException;
-import org.sep.bankservice.model.Merchant;
-import org.sep.bankservice.model.Transaction;
-import org.sep.bankservice.model.TransactionRequest;
-import org.sep.bankservice.model.TransactionResponse;
+import org.sep.bankservice.model.*;
 import org.sep.bankservice.repository.MerchantRepository;
 import org.sep.bankservice.repository.TransactionRepository;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
@@ -26,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static org.sep.bankservice.model.TransactionStatus.*;
+import static org.sep.paymentgatewayservice.method.api.MerchantOrderStatus.*;
 import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.CREATED;
 import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.ERROR;
 
@@ -58,40 +56,40 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public PaymentResponse createPayment(final PaymentRequest paymentRequest) {
-        this.assertAllNotNull(paymentRequest, paymentRequest.getSellerIssn(), paymentRequest.getItem(),
-                paymentRequest.getPrice(), paymentRequest.getReturnUrl());
-        final Merchant merchant = this.getMerchant(paymentRequest.getSellerIssn());
+        this.assertAllNotNull(paymentRequest, paymentRequest.getMerchantId(), paymentRequest.getMerchantOrderId(),
+                paymentRequest.getItem(), paymentRequest.getPrice(), paymentRequest.getReturnUrl());
+        final MerchantEntity merchant = this.getMerchant(paymentRequest.getMerchantId());
 
         final TransactionRequest transactionRequest = TransactionRequest.builder()
-                .merchantId(merchant.getMerchantId())
-                .merchantPassword(merchant.getMerchantPassword())
-                .merchantOrderId("something") // FIXME: need to send this ID from the SB
+                .merchantId(merchant.getBankMerchantId())
+                .merchantPassword(merchant.getBankMerchantPassword())
+                .merchantOrderId(paymentRequest.getMerchantOrderId())
                 .merchantTimestamp(LocalDateTime.now())
                 .item(paymentRequest.getItem())
                 .amount(paymentRequest.getPrice())
                 .description(paymentRequest.getDescription())
-                .successUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/success_payment?orderId=")
-                .errorUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/cancel_payment?orderId=")
+                .successUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/success_payment?orderId=" + paymentRequest.getMerchantOrderId())
+                .errorUrl(HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/cancel_payment?orderId=" + paymentRequest.getMerchantOrderId())
                 .build();
 
         log.info("Sending request (merchantId: {}, item: {}) to acquirer", merchant.getMerchantId(), paymentRequest.getItem());
         final HttpEntity<TransactionRequest> requestEntity = new HttpEntity<>(transactionRequest);
-        final ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(getUrl(), HttpMethod.POST, requestEntity, TransactionResponse.class);
+        final ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(getAcquirerUrl(), HttpMethod.POST, requestEntity, TransactionResponse.class);
 
         final TransactionResponse response = responseEntity.getBody();
         if (response == null || !response.isSuccess()) {
-            log.error("Wrong response from acquirer (merchantId: {}, item: {})", merchant.getMerchantId(), paymentRequest.getItem());
+            log.error("Wrong response from acquirer (merchantId: {}, orderId: {})", merchant.getMerchantId(), paymentRequest.getMerchantOrderId());
             return PaymentResponse.builder()
-                    .paymentUrl(paymentRequest.getReturnUrl())
                     .status(ERROR)
                     .build();
         }
 
         log.info("Response from acquirer (paymentId: {}, paymentUrl: {})", response.getPaymentId(), response.getPaymentUrl());
-        final Transaction transaction = Transaction.builder()
-                .orderId(response.getPaymentId()) // TODO check is this correct
+        final TransactionEntity transaction = TransactionEntity.builder()
+                .orderId(paymentRequest.getMerchantOrderId())
+                .bankTransactionId(response.getPaymentId())
                 .item(paymentRequest.getItem())
-                .status(NEW)
+                .status(IN_PROGRESS)
                 .price(paymentRequest.getPrice())
                 .timestamp(transactionRequest.getMerchantTimestamp())
                 .returnUrl(paymentRequest.getReturnUrl())
@@ -103,7 +101,6 @@ public class BankServiceImpl implements BankService {
                 transaction.getItem(), transaction.getPrice(), transaction.getTimestamp(), merchant.getMerchantId());
 
         return PaymentResponse.builder()
-                .orderId(response.getPaymentId())
                 .paymentUrl(response.getPaymentUrl())
                 .status(CREATED)
                 .build();
@@ -111,10 +108,7 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public String completePayment(final PaymentCompleteRequest paymentCompleteRequest) {
-        final Transaction transaction = this.transactionRepository.findByOrderId(paymentCompleteRequest.getOrderId());
-        if (transaction == null) {
-            throw new InvalidDataException();
-        }
+        TransactionEntity transaction = getTransactionByOrderId(paymentCompleteRequest.getOrderId());
         transaction.setStatus(paymentCompleteRequest.getStatus() == PaymentStatus.SUCCESS ? FINISHED : CANCELED);
         this.transactionRepository.save(transaction);
         log.info("Transaction status updated ({})", transaction.getStatus());
@@ -122,15 +116,25 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    public String retrieveSellerRegistrationUrl(String issn) {
-        return HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/registration?issn=" + issn;
+    public String retrieveMerchantRegistrationUrl(String merchantId) {
+        return HTTPS_PREFIX + this.serverAddress + ":" + this.serverPort + "/registration?merchantId=" + merchantId;
     }
 
     @Override
-    public String registerSeller(final Merchant merchant) {
-        this.merchantRepository.save(merchant);
-        log.info("Merchant (issn: {}, merchantId: {}) registered", merchant.getIssn(), merchant.getMerchantId());
-        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getIssn()).getBody();
+    public String registerMerchant(final Merchant merchant) {
+        MerchantEntity merchantEntity = MerchantEntity.builder()
+                .merchantId(merchant.getMerchantId())
+                .bankMerchantId(merchant.getBankMerchantId())
+                .bankMerchantPassword(merchant.getBankMerchantPassword())
+                .build();
+        this.merchantRepository.save(merchantEntity);
+        log.info("Merchant (merchantId: {}) registered!", merchantEntity.getMerchantId());
+        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantEntity.getMerchantId()).getBody();
+    }
+
+    @Override
+    public MerchantOrderStatus getOrderStatus(String orderId) {
+        return getTransactionByOrderId(orderId).getStatus();
     }
 
     private void assertAllNotNull(final Object... objects) {
@@ -139,17 +143,25 @@ public class BankServiceImpl implements BankService {
         }
     }
 
-    private Merchant getMerchant(final String issn) {
-        final Merchant merchant = this.merchantRepository.findByIssn(issn);
+    private MerchantEntity getMerchant(final String merchantId) {
+        final MerchantEntity merchant = this.merchantRepository.findByMerchantId(merchantId);
         if (merchant == null) {
-            log.error("No merchant for issn: {}", issn);
-            throw new MerchantNotFoundException(issn);
+            log.error("No merchant with id: {}", merchantId);
+            throw new MerchantNotFoundException(merchantId);
         }
-        log.info("Found merchant with issn: {}", issn);
+        log.info("Found merchant with id: {}", merchantId);
         return merchant;
     }
 
-    private String getUrl() {
+    private TransactionEntity getTransactionByOrderId(String orderId) {
+        final TransactionEntity transaction = this.transactionRepository.findByOrderId(orderId);
+        if (transaction == null) {
+            throw new InvalidDataException();
+        }
+        return transaction;
+    }
+
+    private String getAcquirerUrl() {
         return HTTPS_PREFIX + acquirerHost + ":" + acquirerPort;
     }
 

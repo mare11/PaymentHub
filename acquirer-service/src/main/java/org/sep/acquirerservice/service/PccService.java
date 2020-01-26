@@ -31,7 +31,7 @@ public class PccService {
     public PccResponse sendRequestToPcc(PccRequest pccRequest) {
         log.info("Sending request to PCC. Request: {}", pccRequest);
         HttpEntity<PccRequest> requestEntity = new HttpEntity<>(pccRequest);
-        ResponseEntity<PccResponse> responseEntity = this.restTemplate.exchange(getUrl(), HttpMethod.POST, requestEntity, PccResponse.class);
+        ResponseEntity<PccResponse> responseEntity = this.restTemplate.exchange(getPccUrl(), HttpMethod.POST, requestEntity, PccResponse.class);
         PccResponse response = responseEntity.getBody();
         log.info("Got response from PCC. Response: {}", response);
         return response;
@@ -39,12 +39,12 @@ public class PccService {
 
     public TransactionStatus checkTransactionStatus(String transactionId) {
         log.info("Checking status for transaction (id: {})", transactionId);
-        TransactionStatus response = this.restTemplate.getForObject(getUrl().concat("/").concat(transactionId), TransactionStatus.class);
+        TransactionStatus response = this.restTemplate.getForObject(getPccUrl().concat("/").concat(transactionId), TransactionStatus.class);
         log.info("Got response from PCC. Response: {}", response);
         return response;
     }
 
-    private String getUrl() {
+    private String getPccUrl() {
         return HTTPS_PREFIX + pccHost + ":" + pccPort;
     }
 }

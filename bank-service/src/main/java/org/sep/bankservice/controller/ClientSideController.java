@@ -22,9 +22,15 @@ public class ClientSideController {
     }
 
     @GetMapping(value = "/registration")
-    public String registration(@RequestParam("issn") final String issn, final Model model) {
-        model.addAttribute("issn", issn);
+    public String registration(@RequestParam("merchantId") final String merchantId, final Model model) {
+        model.addAttribute("merchantId", merchantId);
         return "registration";
+    }
+
+    @ResponseBody
+    @PostMapping(value = "/register_merchant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> registerMerchant(@RequestBody final Merchant merchant) {
+        return ResponseEntity.ok(this.bankService.registerMerchant(merchant));
     }
 
     @GetMapping(value = "/success_payment")
@@ -39,11 +45,5 @@ public class ClientSideController {
         model.addAttribute("returnUrl", this.bankService.completePayment(new PaymentCompleteRequest(orderId, PaymentStatus.CANCEL)));
         model.addAttribute("message", "Your payment is canceled!");
         return "payment_completed";
-    }
-
-    @ResponseBody
-    @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerSeller(@RequestBody final Merchant merchant) {
-        return ResponseEntity.ok(this.bankService.registerSeller(merchant));
     }
 }

@@ -62,7 +62,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         TransactionEntity transaction = TransactionEntity.builder()
                 .amount(request.getAmount())
-                .accountNumber(card.getAccountNumber())
+                .card(card)
                 .status(SUBMITTED)
                 .build();
 

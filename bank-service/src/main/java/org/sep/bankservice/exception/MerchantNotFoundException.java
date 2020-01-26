@@ -8,7 +8,7 @@ public class MerchantNotFoundException extends RuntimeException {
 
     private static final long serialVersionUID = -5222168666948269979L;
 
-    public MerchantNotFoundException(String issn) {
-        super("Merchant with issn: " + issn + " not found!");
+    public MerchantNotFoundException(String merchantId) {
+        super("Merchant with id: " + merchantId + " not found!");
     }
 }

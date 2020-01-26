@@ -46,7 +46,7 @@ public class SchedulerService {
             if (!transaction.getCustomerPan().startsWith(acquirerPan)) {
                 //ping pcc and issuer to check status
                 log.info("Checking transaction status with issuer...");
-                TransactionStatus status = pccService.checkTransactionStatus(transaction.getId().toString());
+                TransactionStatus status = pccService.checkTransactionStatus(transaction.getId());
                 if (status != null && status != transaction.getStatus()) {
                     transaction.setStatus(status);
                     transactionRepository.save(transaction);

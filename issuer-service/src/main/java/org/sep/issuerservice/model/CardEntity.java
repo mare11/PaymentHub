@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -43,4 +44,7 @@ public class CardEntity {
     @ManyToOne
     @ToString.Exclude
     private ClientEntity client;
+
+    @OneToMany(mappedBy = "card")
+    private Set<TransactionEntity> transactions;
 }
