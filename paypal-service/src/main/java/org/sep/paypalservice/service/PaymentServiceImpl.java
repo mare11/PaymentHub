@@ -11,6 +11,7 @@ import org.sep.paypalservice.dto.RedirectionDto;
 import org.sep.paypalservice.exceptions.NoMerchantFoundException;
 import org.sep.paypalservice.exceptions.NoOrderFoundException;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
+import org.sep.paypalservice.exceptions.ResourceNotFoundException;
 import org.sep.paypalservice.model.MerchantPaymentDetails;
 import org.sep.paypalservice.model.PaymentTransaction;
 import org.sep.paypalservice.model.TransactionStatus;
@@ -213,9 +214,11 @@ public class PaymentServiceImpl implements PaymentService {
                 if (!order.status().equals(TransactionStatus.CREATED.name())) {
                     this.updateTransactionStatus(paymentTransaction, TransactionStatus.valueOf(order.status()));
                 }
-            } catch (final RequestCouldNotBeExecutedException e) {
+            } catch (final ResourceNotFoundException e) {
                 log.info("Order with id {} could not be found", paymentTransaction.getOrderId());
                 this.updateTransactionStatus(paymentTransaction, TransactionStatus.VOIDED);
+            } catch (final RequestCouldNotBeExecutedException e) {
+                log.info("Request to PayPal API for payment with id {} has failed because of communication problems", paymentTransaction.getOrderId());
             }
         });
 
@@ -228,9 +231,11 @@ public class PaymentServiceImpl implements PaymentService {
                 if (!order.status().equals(TransactionStatus.APPROVED.name())) {
                     this.updateTransactionStatus(paymentTransaction, TransactionStatus.valueOf(order.status()));
                 }
-            } catch (final RequestCouldNotBeExecutedException e) {
+            } catch (final ResourceNotFoundException e) {
                 log.info("Order with id {} could not be found", paymentTransaction.getOrderId());
                 this.updateTransactionStatus(paymentTransaction, TransactionStatus.VOIDED);
+            } catch (final RequestCouldNotBeExecutedException e) {
+                log.info("Request to PayPal API for payment with id {} has failed because of communication problems", paymentTransaction.getOrderId());
             }
         });
 

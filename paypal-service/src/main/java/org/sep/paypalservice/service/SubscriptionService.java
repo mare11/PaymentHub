@@ -1,8 +1,6 @@
 package org.sep.paypalservice.service;
 
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
 import org.sep.paypalservice.model.SubscriptionTransaction;
@@ -20,6 +18,8 @@ public interface SubscriptionService {
     void updateTransaction(SubscriptionTransaction subscriptionTransaction);
 
     RedirectionDto completeSubscriptionTransaction(CompleteDto completeDto);
+
+    SubscriptionCancelResponse cancelSubscription(SubscriptionCancelRequest subscriptionCancelRequest);
 
     void checkUnfinishedTransactions();
 }

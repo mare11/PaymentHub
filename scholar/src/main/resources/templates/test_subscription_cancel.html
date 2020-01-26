@@ -8,12 +8,14 @@
 </head>
 <body>
 <div class="container-fluid">
-    <form id="subscription_form">
+    <form id="subscription_cancel_form">
         <div class="form-group">
-            <label for="merchantId">Merchant id</label>
-            <input type="text" class="form-control" id="merchantId" name="merchantId">
+            <label for="merchantSubscriptionId">Merchant subscription id</label>
+            <input type="text" class="form-control" id="merchantSubscriptionId" name="merchantSubscriptionId">
+            <label for="cancelingReason">Reason of canceling</label>
+            <input type="text" class="form-control" id="cancelingReason" name="cancelingReason">
         </div>
-        <button type="submit" id="submit_subscription_btn" class="btn btn-primary">Submit</button>
+        <button type="submit" id="submit_subscription_cancel_btn" class="btn btn-primary">Submit</button>
     </form>
 </div>
 
