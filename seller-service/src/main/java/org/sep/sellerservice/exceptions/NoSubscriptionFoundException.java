@@ -11,4 +11,8 @@ public class NoSubscriptionFoundException extends RuntimeException {
     public NoSubscriptionFoundException(final Long id) {
         super("Subscription with id " + id + " is not found.");
     }
+
+    public NoSubscriptionFoundException(final String subscriptionId) {
+        super("Subscription with subscription id " + subscriptionId + " is not found.");
+    }
 }

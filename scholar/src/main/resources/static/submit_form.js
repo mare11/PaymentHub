@@ -28,7 +28,8 @@ $(document).ready(
             data: JSON.stringify({
                 "item": $('#item').val(),
                 "description": $('#description').val(),
-                "price": $('#price').val()
+                "price": $('#price').val(),
+                "issn": $('#issn').val()
             }),
             dataType: 'json',
             success: function (response) {

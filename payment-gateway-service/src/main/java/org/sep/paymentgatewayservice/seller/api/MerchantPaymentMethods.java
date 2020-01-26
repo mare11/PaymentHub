@@ -1,18 +1,19 @@
-package org.sep.sellerservice.dto;
+package org.sep.paymentgatewayservice.seller.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerDto {
-    private Long id;
-    private String name;
-    private String issn;
+public class MerchantPaymentMethods {
+
+    private String merchantId;
     private String returnUrl;
-    private Boolean enabled;
+    private List<PaymentMethod> paymentMethods;
 }

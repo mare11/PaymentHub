@@ -4,13 +4,14 @@ import org.sep.paymentgatewayservice.method.api.SubscriptionApi;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
-import org.sep.paypalservice.model.SubscriptionTransaction;
+import org.sep.paypalservice.dto.CompleteDto;
+import org.sep.paypalservice.dto.RedirectionDto;
 import org.sep.paypalservice.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -35,8 +36,8 @@ public class SubscriptionController implements SubscriptionApi {
         return ResponseEntity.ok(this.subscriptionService.retrieveSubscriptionPlans(merchantId));
     }
 
-    @GetMapping(value = "/subscription_transaction/{subscriptionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SubscriptionTransaction> getPaymentTransaction(@PathVariable final String subscriptionId) {
-        return ResponseEntity.ok(this.subscriptionService.findBySubscriptionId(subscriptionId));
+    @PostMapping(value = "/subscription_transaction", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RedirectionDto> getPaymentTransaction(@RequestBody final CompleteDto completeDto) {
+        return ResponseEntity.ok(this.subscriptionService.completeSubscriptionTransaction(completeDto));
     }
 }

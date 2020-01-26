@@ -9,15 +9,16 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class SubscriptionComponent implements OnInit {
 
-  subscriptionId: number;
+  subscriptionId: string;
   plans: any[];
   selectedPlan = null;
   subscriptionProcessing = false;
+  totalCycles: number;
 
   constructor(private subscriptionService: SubscriptionService, private route: ActivatedRoute) { }
 
   ngOnInit() {
-    this.subscriptionId = parseInt(this.route.snapshot.paramMap.get('id'), 10);
+    this.subscriptionId = this.route.snapshot.paramMap.get('id');
     this.subscriptionService.retrieveSubscriptionPlans(this.subscriptionId).subscribe(
       (plans: []) => {
         this.plans = plans;
@@ -26,9 +27,10 @@ export class SubscriptionComponent implements OnInit {
   }
 
   confirm() {
-    if (this.selectedPlan) {
+    if (this.selectedPlan && this.totalCycles) {
       this.subscriptionProcessing = true;
-      const subscription = { id: this.subscriptionId, plan: this.selectedPlan };
+      this.selectedPlan.totalCycles = this.totalCycles;
+      const subscription = { merchantSubscriptionId: this.subscriptionId, plan: this.selectedPlan };
       this.subscriptionService.createSubscription(subscription).subscribe(
         (subscriptonResponse: any) => {
           if (subscriptonResponse.status === 'SUSPENDED') {

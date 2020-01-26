@@ -12,6 +12,6 @@ import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 @Builder
 public class CustomerSubscriptionDto {
 
-    private Long id;
+    private String merchantSubscriptionId;
     private SubscriptionPlan plan;
 }

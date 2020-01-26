@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentRequest {
-    private String sellerIssn;
-    private String sellerName;
+    private String merchantId;
+    private String merchantName;
+    private String merchantOrderId;
     private String item;
     private Double price;
-    private String priceCurrency;
     private String description;
     private String method;
     private String returnUrl;

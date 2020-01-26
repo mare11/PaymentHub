@@ -1,6 +1,7 @@
 package org.sep.paymentgatewayservice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.exceptions.NoPaymentMethodFoundException;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
@@ -21,27 +22,27 @@ import java.util.stream.Stream;
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
     private static final String HTTPS_PREFIX = "https://";
-    private final SellerServiceApi sellerServiceApi;
+    private final MerchantServiceApi merchantServiceApi;
     private final PaymentMethodServiceApi paymentMethodServiceApi;
     private final PaymentMethodApi paymentMethodApi;
     private final SubscriptionApi subscriptionApi;
     private final Map<String, PaymentMethodData> paymentMethodDataMap;
-    private final Map<String, SellerPaymentMethods> sellerRegistrationMap;
+    private final Map<String, MerchantPaymentMethods> merchantPaymentMethodsMap;
 
     @Autowired
-    public PaymentGatewayServiceImpl(final SellerServiceApi sellerServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final SubscriptionApi subscriptionApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, SellerPaymentMethods> sellerRegistrationMap) {
-        this.sellerServiceApi = sellerServiceApi;
+    public PaymentGatewayServiceImpl(final MerchantServiceApi merchantServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final SubscriptionApi subscriptionApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, MerchantPaymentMethods> merchantPaymentMethodsMap) {
+        this.merchantServiceApi = merchantServiceApi;
         this.paymentMethodServiceApi = paymentMethodServiceApi;
         this.paymentMethodApi = paymentMethodApi;
         this.subscriptionApi = subscriptionApi;
         this.paymentMethodDataMap = paymentMethodDataMap;
-        this.sellerRegistrationMap = sellerRegistrationMap;
+        this.merchantPaymentMethodsMap = merchantPaymentMethodsMap;
     }
 
     @Override
-    public PaymentResponse preparePayment(final PaymentRequest paymentRequest) {
+    public RedirectionResponse preparePayment(final PaymentRequest paymentRequest) {
         log.info("Call seller service to prepare payment");
-        return this.sellerServiceApi.preparePayment(paymentRequest).getBody();
+        return this.merchantServiceApi.preparePayment(paymentRequest).getBody();
     }
 
     @Override
@@ -60,14 +61,14 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     private URI generateBaseUri(final PaymentMethodData paymentMethodData) {
-        return URI.create(HTTPS_PREFIX + paymentMethodData.getServiceName() + ":" + paymentMethodData.getPort());
+        return URI.create(HTTPS_PREFIX + paymentMethodData.getHost() + ":" + paymentMethodData.getPort());
     }
 
     @Override
     public void registerPaymentMethod(final PaymentMethodData paymentMethodData) {
         Assert.notNull(paymentMethodData, "Payment method data object can't be null!");
         Assert.noNullElements(
-                Stream.of(paymentMethodData.getServiceName(),
+                Stream.of(paymentMethodData.getHost(),
                         paymentMethodData.getPort(),
                         paymentMethodData.getName())
                         .toArray(),
@@ -77,7 +78,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
         log.info("Registering payment method with name '{}', service name '{}' and port '{}'...",
                 paymentMethodData.getName(),
-                paymentMethodData.getServiceName(),
+                paymentMethodData.getHost(),
                 paymentMethodData.getPort());
 
         final PaymentMethod paymentMethod = PaymentMethod.builder()
@@ -90,26 +91,26 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public String registerSellerInPaymentMethod(final SellerPaymentMethods sellerPaymentMethods) throws SellerAlreadyExistsException {
-        Assert.notNull(sellerPaymentMethods, "Seller payment methods object can't be null!");
+    public String registerMerchantInPaymentMethod(final MerchantPaymentMethods merchantPaymentMethods) throws MerchantAlreadyExistsException {
+        Assert.notNull(merchantPaymentMethods, "Merchant payment methods object can't be null!");
         Assert.noNullElements(
-                Stream.of(sellerPaymentMethods.getSellerIssn(),
-                        sellerPaymentMethods.getReturnUrl(),
-                        sellerPaymentMethods.getPaymentMethods())
+                Stream.of(merchantPaymentMethods.getMerchantId(),
+                        merchantPaymentMethods.getReturnUrl(),
+                        merchantPaymentMethods.getPaymentMethods())
                         .toArray(),
                 "One or more fields are not specified.");
 
 
-        this.sellerRegistrationMap.put(sellerPaymentMethods.getSellerIssn(), sellerPaymentMethods);
+        this.merchantPaymentMethodsMap.put(merchantPaymentMethods.getMerchantId(), merchantPaymentMethods);
         log.info("Move on to first (or only) chosen payment method registration...");
-        return this.registerSeller(sellerPaymentMethods.getSellerIssn());
+        return this.registerMerchant(merchantPaymentMethods.getMerchantId());
     }
 
     @Override
-    public String proceedToNextPaymentMethod(final String sellerIssn) {
-        Assert.notNull(sellerIssn, "Seller issn can't be null!");
+    public String proceedToNextPaymentMethod(final String merchantId) {
+        Assert.notNull(merchantId, "Merchant id can't be null!");
         log.info("Move on to next payment method or end process if there are no payment methods left...");
-        return this.registerSeller(sellerIssn);
+        return this.registerMerchant(merchantId);
     }
 
     @Override
@@ -120,29 +121,29 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
     @Override
     public SubscriptionResponse createSubscription(final SubscriptionRequest subscriptionRequest) {
-        log.info("Calling paypal service to create subscription for plan with id '{}'", subscriptionRequest.getPlanId());
+        log.info("Calling paypal service to create subscription for plan with id '{}'", subscriptionRequest.getId());
         return this.subscriptionApi.createSubscription(subscriptionRequest).getBody();
     }
 
-    private String registerSeller(final String sellerIssn) {
-        final SellerPaymentMethods sellerPaymentMethods = this.sellerRegistrationMap.get(sellerIssn);
+    private String registerMerchant(final String merchantId) {
+        final MerchantPaymentMethods merchantPaymentMethods = this.merchantPaymentMethodsMap.get(merchantId);
 
         final String returnUrl;
-        if (sellerPaymentMethods.getPaymentMethods().isEmpty()) {
-            log.info("No more payment methods left. Go back to seller's site...");
-            this.sellerServiceApi.enableSeller(sellerIssn);
-            returnUrl = sellerPaymentMethods.getReturnUrl();
+        if (merchantPaymentMethods.getPaymentMethods().isEmpty()) {
+            log.info("No more payment methods left. Go back to merchant's site...");
+            this.merchantServiceApi.enableMerchant(merchantId);
+            returnUrl = merchantPaymentMethods.getReturnUrl();
         } else {
-            final PaymentMethod paymentMethod = sellerPaymentMethods.getPaymentMethods().get(0);
+            final PaymentMethod paymentMethod = merchantPaymentMethods.getPaymentMethods().get(0);
 
             final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentMethod.getName());
             final URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
 
             log.info("Send registration request for method named '{}'...", paymentMethod.getName());
-            returnUrl = this.paymentMethodApi.retrieveSellerRegistrationUrl(serviceBaseUri, sellerIssn).getBody();
+            returnUrl = this.paymentMethodApi.retrieveMerchantRegistrationUrl(serviceBaseUri, merchantId).getBody();
             log.info("URL for registration page of method '{}' is retrieved successfully", paymentMethod.getName());
 
-            sellerPaymentMethods.getPaymentMethods().remove(0);
+            merchantPaymentMethods.getPaymentMethods().remove(0);
         }
 
         return returnUrl;

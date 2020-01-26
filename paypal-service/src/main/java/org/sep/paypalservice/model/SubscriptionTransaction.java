@@ -21,12 +21,21 @@ public class SubscriptionTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String planId;
+
     @Column(nullable = false, unique = true)
     private String subscriptionId;
+
+    @Column(nullable = false)
+    private String merchantSubscriptionId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SubscriptionStatus status;
+
+    @Column
+    private Integer totalCycles;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -35,8 +44,8 @@ public class SubscriptionTransaction {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String merchantId;
-
-    @Column(nullable = false)
     private String returnUrl;
+
+    @ManyToOne(optional = false)
+    private PlanEntity planEntity;
 }

@@ -3,14 +3,16 @@ package org.sep.paypalservice.controller;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
+import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
 import org.sep.paypalservice.dto.RegistrationDto;
-import org.sep.paypalservice.model.PaymentTransaction;
 import org.sep.paypalservice.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
@@ -40,8 +42,8 @@ public class PaymentController implements PaymentMethodApi {
         return ResponseEntity.ok(RedirectionDto.builder().redirectionUrl(this.paymentService.registerSeller(registrationDto)).build());
     }
 
-    @GetMapping(value = "/payment_transaction/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<PaymentTransaction> getPaymentTransaction(@PathVariable final String orderId) {
-        return ResponseEntity.ok(this.paymentService.findByOrderId(orderId));
+    @PostMapping(value = "/payment_transaction", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RedirectionDto> completePaymentTransaction(@RequestBody final CompleteDto completeDto) {
+        return ResponseEntity.ok(this.paymentService.completePaymentTransaction(completeDto));
     }
 }

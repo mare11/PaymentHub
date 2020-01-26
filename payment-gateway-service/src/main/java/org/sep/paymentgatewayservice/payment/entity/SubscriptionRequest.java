@@ -11,7 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SubscriptionRequest {
 
-    private String planId;
+    private Long id;
+    private Integer totalCycles;
     private String merchantName;
     private String merchantId;
     private String returnUrl;

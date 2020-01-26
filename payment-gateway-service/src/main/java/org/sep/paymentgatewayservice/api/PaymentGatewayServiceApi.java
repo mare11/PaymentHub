@@ -1,7 +1,7 @@
 package org.sep.paymentgatewayservice.api;
 
 import org.sep.paymentgatewayservice.payment.entity.*;
-import org.sep.paymentgatewayservice.seller.api.SellerPaymentMethods;
+import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +16,13 @@ import java.util.List;
 public interface PaymentGatewayServiceApi {
 
     @PostMapping(value = "/prepare", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PaymentResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);
+    ResponseEntity<RedirectionResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);
 
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest paymentRequest);
 
     @PostMapping(value = "/payment_methods/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<String> registerPaymentMethods(@RequestBody SellerPaymentMethods sellerPaymentMethods);
+    ResponseEntity<String> registerPaymentMethods(@RequestBody MerchantPaymentMethods merchantPaymentMethods);
 
     @GetMapping(value = "/subscription/{merchantId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable String merchantId);

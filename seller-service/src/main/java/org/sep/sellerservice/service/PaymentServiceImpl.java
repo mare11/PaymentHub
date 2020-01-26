@@ -5,13 +5,13 @@ import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
+import org.sep.sellerservice.exceptions.MerchantIsNotEnabledException;
+import org.sep.sellerservice.exceptions.NoMerchantFoundException;
 import org.sep.sellerservice.exceptions.NoPaymentFoundException;
-import org.sep.sellerservice.exceptions.NoSellerFoundException;
-import org.sep.sellerservice.exceptions.SellerIsNotEnabledException;
+import org.sep.sellerservice.model.Merchant;
 import org.sep.sellerservice.model.Payment;
-import org.sep.sellerservice.model.Seller;
+import org.sep.sellerservice.model.PaymentMethodEntity;
 import org.sep.sellerservice.repository.PaymentRepository;
-import org.sep.sellerservice.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -23,57 +23,56 @@ import java.util.stream.Stream;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final SellerRepository sellerRepository;
+    private final MerchantService merchantService;
     private final PaymentGatewayServiceApi paymentGatewayServiceApi;
 
     @Autowired
-    public PaymentServiceImpl(PaymentRepository paymentRepository, SellerRepository sellerRepository, PaymentGatewayServiceApi paymentGatewayServiceApi) {
+    public PaymentServiceImpl(final PaymentRepository paymentRepository, final MerchantService merchantService, final PaymentGatewayServiceApi paymentGatewayServiceApi) {
         this.paymentRepository = paymentRepository;
-        this.sellerRepository = sellerRepository;
+        this.merchantService = merchantService;
         this.paymentGatewayServiceApi = paymentGatewayServiceApi;
     }
 
     @Override
-    public Payment findById(Long id) {
+    public Payment findById(final String id) {
         return this.paymentRepository.findById(id).orElse(null);
     }
 
     @Override
-    public Long preparePayment(PaymentRequest paymentRequest) throws NoSellerFoundException {
+    public String preparePayment(final PaymentRequest paymentRequest) throws NoMerchantFoundException {
         Assert.notNull(paymentRequest, "Payment request can't be null!");
         Assert.noNullElements(
                 Stream.of(paymentRequest.getPrice(),
-                        paymentRequest.getSellerIssn(),
+                        paymentRequest.getMerchantId(),
                         paymentRequest.getReturnUrl())
                         .toArray(),
                 "One or more fields are not specified.");
 
-        Seller seller = this.sellerRepository.findByIssn(paymentRequest.getSellerIssn());
-        log.info("Seller with issn: {} is retrieved", paymentRequest.getSellerIssn());
+        final Merchant merchant = this.merchantService.findById(paymentRequest.getMerchantId());
+        log.info("Merchant with merchant id: {} is retrieved", paymentRequest.getMerchantId());
 
-        if (seller == null || !seller.getEnabled()) {
-            log.error("Seller is not found or is not enabled");
-            throw new NoSellerFoundException(paymentRequest.getSellerIssn());
+        if (merchant == null || !merchant.getEnabled()) {
+            log.error("Merchant is not found or is not enabled");
+            throw new NoMerchantFoundException(paymentRequest.getMerchantId());
         }
 
-        Payment payment = Payment.builder()
-                .seller(seller)
+        final Payment payment = Payment.builder()
+                .merchant(merchant)
                 .item(paymentRequest.getItem())
                 .description(paymentRequest.getDescription())
                 .price(paymentRequest.getPrice())
-                .priceCurrency(paymentRequest.getPriceCurrency())
                 .returnUrl(paymentRequest.getReturnUrl())
                 .build();
-        payment = this.paymentRepository.save(payment);
-        log.info("Payment (merchant: {}, item: {}) is created and saved in seller", payment.getSeller().getIssn(), payment.getItem());
+        this.paymentRepository.save(payment);
+        log.info("Payment (merchant: {}, merchant order id: {}) is created and saved in seller", payment.getMerchant().getId(), payment.getId());
         return payment.getId();
     }
 
     @Override
-    public PaymentResponse proceedPayment(CustomerPaymentDto customerPaymentDto) throws SellerIsNotEnabledException, NoPaymentFoundException {
+    public PaymentResponse proceedPayment(final CustomerPaymentDto customerPaymentDto) throws MerchantIsNotEnabledException, NoPaymentFoundException {
         Assert.notNull(customerPaymentDto, "Customer payment can't be null!");
         Assert.noNullElements(
-                Stream.of(customerPaymentDto.getPaymentId(),
+                Stream.of(customerPaymentDto.getMerchantOrderId(),
                         customerPaymentDto.getPaymentMethod())
                         .toArray(),
                 "One or more fields are not specified.");
@@ -82,28 +81,37 @@ public class PaymentServiceImpl implements PaymentService {
                         customerPaymentDto.getPaymentMethod().getName())
                         .toArray(),
                 "One or more fields in payment method are not specified.");
-        Payment payment = this.findById(customerPaymentDto.getPaymentId());
 
-        if (payment == null){
+        final Payment payment = this.findById(customerPaymentDto.getMerchantOrderId());
+
+        if (payment == null) {
             log.error("Payment is not found");
-            throw new NoPaymentFoundException(customerPaymentDto.getPaymentId());
+            throw new NoPaymentFoundException(customerPaymentDto.getMerchantOrderId());
         }
 
-        if (!payment.getSeller().getEnabled()) {
-            log.error("Seller is not enabled");
-            throw new SellerIsNotEnabledException(payment.getSeller().getIssn());
+        if (!payment.getMerchant().getEnabled()) {
+            log.error("Merchant is not enabled");
+            throw new MerchantIsNotEnabledException(payment.getMerchant().getId());
         }
 
-        PaymentRequest paymentRequest = PaymentRequest.builder()
+        payment.setPaymentMethodEntity(PaymentMethodEntity.builder()
+                .id(customerPaymentDto.getPaymentMethod().getId())
+                .name(customerPaymentDto.getPaymentMethod().getName())
+                .build());
+
+        this.paymentRepository.save(payment);
+
+        final PaymentRequest paymentRequest = PaymentRequest.builder()
                 .item(payment.getItem())
                 .description(payment.getDescription())
                 .price(payment.getPrice())
                 .method(customerPaymentDto.getPaymentMethod().getName())
-                .sellerIssn(payment.getSeller().getIssn())
-                .sellerName(payment.getSeller().getName())
+                .merchantId(payment.getMerchant().getId())
+                .merchantName(payment.getMerchant().getName())
+                .merchantOrderId(payment.getId())
                 .returnUrl(payment.getReturnUrl())
                 .build();
-        log.info("Payment request sent to gateway from seller");
+        log.info("Payment request sent to payment-gateway-service from seller-service");
         return this.paymentGatewayServiceApi.createPayment(paymentRequest).getBody();
     }
 }

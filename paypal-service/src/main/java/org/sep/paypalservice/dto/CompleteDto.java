@@ -1,4 +1,4 @@
-package org.sep.paymentgatewayservice.api;
+package org.sep.paypalservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerRequest {
+public class CompleteDto {
 
-    private String name;
-    private String issn;
-    private String returnUrl;
+    private String id;
+    private Boolean successFlag;
 }

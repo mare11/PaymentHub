@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class PlanDto {
 
     private String plan;
+    private String intervalUnit;
+    private Integer intervalCount;
     private Double price;
 }

@@ -8,7 +8,7 @@ export class PaymentService {
 
   constructor(private http: HttpClient) { }
 
-  getSellerPaymentMethods(id: number) {
+  getSellerPaymentMethods(id: string) {
     return this.http.get('/api/methods/' + id);
   }
 

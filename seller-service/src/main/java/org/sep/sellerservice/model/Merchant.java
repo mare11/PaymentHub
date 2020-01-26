@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -13,17 +14,15 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Seller {
+public class Merchant {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    private String id;
 
     @Column(nullable = false)
     private String name;
-
-    @Column(unique = true, nullable = false)
-    private String issn;
 
     @Column
     private Boolean enabled;
@@ -32,8 +31,8 @@ public class Seller {
     private String returnUrl;
 
     @ManyToMany
-    @JoinTable(name = "sellers_payment_methods",
-            joinColumns = {@JoinColumn(name = "seller_id")},
+    @JoinTable(name = "merchant_payment_methods",
+            joinColumns = {@JoinColumn(name = "merchant_id")},
             inverseJoinColumns = {@JoinColumn(name = "method_id")})
     private Set<PaymentMethodEntity> paymentMethodEntities;
 }

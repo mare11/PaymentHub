@@ -30,10 +30,10 @@ export class RegistrationComponent implements OnInit {
     });
 
     this.plans = [
-      {position: 1, plan: 'DAY'},
-      {position: 2, plan: 'WEEK'},
-      {position: 3, plan: 'MONTH'},
-      {position: 4, plan: 'YEAR'}
+      {position: 1, plan: '1 MONTH', intervalUnit:'MONTH', intervalCount: 1},
+      {position: 2, plan: '3 MONTHS', intervalUnit:'MONTH', intervalCount: 3},
+      {position: 3, plan: '6 MONTHS', intervalUnit:'MONTH', intervalCount: 6},
+      {position: 4, plan: '1 YEAR', intervalUnit:'YEAR', intervalCount: 1}
     ]
 
     this.plans.forEach(plan => {
@@ -62,6 +62,8 @@ export class RegistrationComponent implements OnInit {
         if (this.form.value[plan.plan + ' enabled']) {
           registrationDto.plans.push({
             plan: plan.plan,
+            intervalUnit: plan.intervalUnit,
+            intervalCount: plan.intervalCount,
             price: this.form.value[plan.plan]
           });
         }

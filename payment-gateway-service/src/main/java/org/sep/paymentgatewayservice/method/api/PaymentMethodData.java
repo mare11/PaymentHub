@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class PaymentMethodData {
 
     private String name;
-    private String serviceName;
+    private String host;
     private Integer port;
 }

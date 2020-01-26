@@ -12,11 +12,11 @@ export class PaypalService {
     return this.http.post('/api/register_seller', registrationDto);
   }
 
-  getPaymentTransaction(orderId: string) {
-    return this.http.get('/api/payment_transaction/'.concat(orderId));
+  completePaymentTransaction(completeDto: any) {
+    return this.http.post('/api/payment_transaction', completeDto);
   }
   
-  getSubscriptionTransaction(subscriptionId: string) {
-    return this.http.get('/api/subscription_transaction/'.concat(subscriptionId));
+  completeSubscriptionTransaction(completeDto: any) {
+    return this.http.post('/api/subscription_transaction', completeDto);
   }
 }

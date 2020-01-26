@@ -20,9 +20,11 @@ export class PaymentCompletedComponent implements OnInit {
 
   ngOnInit() {
     const orderId = this.activatedRouter.snapshot.queryParamMap.get('token');
-    this.paypalService.getPaymentTransaction(orderId).subscribe(
-      (paymentTransaction: any) => {
-        this.returnUrl = paymentTransaction.returnUrl;
+    const successFlag = this.router.url.startsWith('/success_payment') ? true : false;
+    const completeDto = {id: orderId, successFlag: successFlag}
+    this.paypalService.completePaymentTransaction(completeDto).subscribe(
+      (redirectionDto: any) => {
+        this.returnUrl = redirectionDto.redirectionUrl;
         console.log(this.router.url);
         if (this.router.url.startsWith('/success_payment')) {
           this.message = this.successMessage;

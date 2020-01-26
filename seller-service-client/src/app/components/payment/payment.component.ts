@@ -9,7 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class PaymentComponent implements OnInit {
 
-  paymentId: number;
+  paymentId: string;
   paymentMethods: any[];
   selectedMethod = null;
   paymentProcessing = false;
@@ -17,7 +17,7 @@ export class PaymentComponent implements OnInit {
   constructor(private paymentService: PaymentService, private route: ActivatedRoute) { }
 
   ngOnInit() {
-    this.paymentId = parseInt(this.route.snapshot.paramMap.get('id'), 10);
+    this.paymentId = this.route.snapshot.paramMap.get('id');
     this.paymentService.getSellerPaymentMethods(this.paymentId).subscribe(
       (methods: []) => {
         this.paymentMethods = methods;
@@ -27,7 +27,7 @@ export class PaymentComponent implements OnInit {
 
   confirm() {
     if (this.selectedMethod) {
-      const payment = { paymentId: this.paymentId, paymentMethod: this.selectedMethod };
+      const payment = { merchantOrderId: this.paymentId, paymentMethod: this.selectedMethod };
       this.paymentProcessing = true;
       this.paymentService.payment(payment).subscribe(
         (paymentResponse: any) => {

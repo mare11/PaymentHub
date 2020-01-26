@@ -37,6 +37,9 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private String merchantId;
 
+    @Column(nullable = false)
+    private String merchantOrderId;
+
     @Column
     private String payerId;
 
