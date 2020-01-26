@@ -11,7 +11,7 @@
     <groupId>org.sep</groupId>
     <artifactId>seller-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>merchant-service</name>
+    <name>seller-service</name>
     <description>Service for handling client data and payment methods</description>
 
     <properties>
