@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.sep</groupId>
-    <artifactId>merchant-service</artifactId>
+    <artifactId>seller-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>merchant-service</name>
     <description>Service for handling client data and payment methods</description>
