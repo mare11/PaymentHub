@@ -106,7 +106,7 @@ public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetails
                 .category(MAGAZINES)
                 .build();
 
-        final CreateRequest<Product> productsCreateRequest = new ProductsCreateRequest()
+        final PostRequest<Product> productsCreateRequest = new ProductsCreateRequest()
                 .prefer(PayPalUtil.PREFER_HEADER)
                 .requestBody(product);
 

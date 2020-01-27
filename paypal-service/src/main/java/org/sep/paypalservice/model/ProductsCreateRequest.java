@@ -1,6 +1,6 @@
 package org.sep.paypalservice.model;
 
-public class ProductsCreateRequest extends CreateRequest<Product> {
+public class ProductsCreateRequest extends PostRequest<Product> {
 
     private static final String PRODUCTS_PATH = "/v1/catalogs/products";
 

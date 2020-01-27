@@ -24,4 +24,9 @@ public class Controller {
     public String testSubscription() {
         return "test_subscription";
     }
+
+    @GetMapping(value = "/subscription/cancel")
+    public String testSubscriptionCancel() {
+        return "test_subscription_cancel";
+    }
 }

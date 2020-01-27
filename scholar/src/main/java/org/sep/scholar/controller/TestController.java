@@ -1,9 +1,6 @@
 package org.sep.scholar.controller;
 
-import org.sep.scholar.controller.model.MerchantRequest;
-import org.sep.scholar.controller.model.PaymentRequest;
-import org.sep.scholar.controller.model.PaymentResponse;
-import org.sep.scholar.controller.model.RedirectionResponse;
+import org.sep.scholar.controller.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -46,5 +43,10 @@ public class TestController {
     public ResponseEntity<RedirectionResponse> subscribe(@RequestBody final MerchantRequest merchantRequest) {
         merchantRequest.setReturnUrl(HTTP_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT);
         return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/subscription", merchantRequest, RedirectionResponse.class);
+    }
+
+    @PostMapping(value = "/subscription/cancel", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SubscriptionCancelResponse> cancelSubscription(@RequestBody final SubscriptionCancelRequest subscriptionCancelRequest) {
+        return this.restTemplate.postForEntity(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + GATEWAY_PORT + "/subscription/cancel", subscriptionCancelRequest, SubscriptionCancelResponse.class);
     }
 }

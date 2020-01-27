@@ -1,9 +1,6 @@
 package org.sep.paymentgatewayservice.method.api;
 
-import org.sep.paymentgatewayservice.payment.entity.FeignConfiguration;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paymentgatewayservice.payment.entity.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,4 +19,7 @@ public interface SubscriptionApi {
 
     @GetMapping(value = "/{merchantId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable String merchantId);
+
+    @PostMapping(value = "/subscription/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SubscriptionCancelResponse> cancelSubscription(@RequestBody final SubscriptionCancelRequest subscriptionCancelRequest);
 }

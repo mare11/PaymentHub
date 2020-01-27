@@ -1,11 +1,15 @@
 package org.sep.paypalservice.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paypal.core.PayPalEnvironment;
 import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpRequest;
 import com.paypal.http.HttpResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
+import org.sep.paypalservice.exceptions.ResourceNotFoundException;
 import org.sep.paypalservice.model.MerchantPaymentDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +33,7 @@ public class PayPalUtil {
     public static final String HTTPS_PREFIX = "https://";
     public static final int SCHEDULER_DELAY_IN_SECONDS = 30;
     public static final int SCHEDULER_INITIAL_DELAY_IN_SECONDS = 10;
+    private static final String RESOURCE_NOT_FOUND_KEY = "RESOURCE_NOT_FOUND";
     private final SSLContext sslContext;
 
     @Autowired
@@ -45,7 +50,8 @@ public class PayPalUtil {
         return httpClient;
     }
 
-    public <T> T sendRequest(final HttpRequest<T> request, final MerchantPaymentDetails merchantPaymentDetails) throws RequestCouldNotBeExecutedException {
+    public <T> T sendRequest(final HttpRequest<T> request, final MerchantPaymentDetails merchantPaymentDetails)
+            throws RequestCouldNotBeExecutedException, ResourceNotFoundException {
         final PayPalHttpClient httpClient = this.getHttpClient(merchantPaymentDetails);
         httpClient.setSSLSocketFactory(this.sslContext.getSocketFactory());
 
@@ -57,8 +63,21 @@ public class PayPalUtil {
 
             object = response.result();
         } catch (final IOException e) {
-            log.error(e.getMessage());
-            throw new RequestCouldNotBeExecutedException(e.getMessage());
+            final ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                final JsonNode jsonMessage = objectMapper.readTree(e.getMessage());
+                final String errorKey = jsonMessage.get("name").asText();
+                final String errorMessage = jsonMessage.get("message").asText();
+                log.error(errorMessage);
+                if (errorKey.equals(RESOURCE_NOT_FOUND_KEY)) {
+                    throw new ResourceNotFoundException(errorMessage);
+                } else {
+                    throw new RequestCouldNotBeExecutedException(errorMessage);
+                }
+            } catch (final JsonProcessingException ex) {
+                log.error(ex.getMessage());
+                throw new RequestCouldNotBeExecutedException(ex.getMessage());
+            }
         }
 
         return object;

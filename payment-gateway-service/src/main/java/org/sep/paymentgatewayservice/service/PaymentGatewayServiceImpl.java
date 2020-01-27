@@ -125,6 +125,12 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         return this.subscriptionApi.createSubscription(subscriptionRequest).getBody();
     }
 
+    @Override
+    public SubscriptionCancelResponse cancelSubscription(final SubscriptionCancelRequest subscriptionCancelRequest) {
+        log.info("Calling paypal service to cancel subscription with merchant subscription id '{}'", subscriptionCancelRequest.getMerchantSubscriptionId());
+        return this.subscriptionApi.cancelSubscription(subscriptionCancelRequest).getBody();
+    }
+
     private String registerMerchant(final String merchantId) {
         final MerchantPaymentMethods merchantPaymentMethods = this.merchantPaymentMethodsMap.get(merchantId);
 

@@ -5,15 +5,13 @@ import com.paypal.orders.LinkDescription;
 import com.paypal.orders.Money;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.sep.paymentgatewayservice.payment.entity.CreateSubscriptionStatus;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
 import org.sep.paypalservice.exceptions.NoPlanFoundException;
 import org.sep.paypalservice.exceptions.NoSubscriptionFoundException;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
+import org.sep.paypalservice.exceptions.ResourceNotFoundException;
 import org.sep.paypalservice.model.*;
 import org.sep.paypalservice.repository.PlanEntityRepository;
 import org.sep.paypalservice.repository.SubscriptionTransactionRepository;
@@ -147,7 +145,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .paymentPreferences(paymentPreferences)
                 .build();
 
-        final CreateRequest<Plan> plansCreateRequest = new PlansCreateRequest()
+        final PostRequest<Plan> plansCreateRequest = new PlansCreateRequest()
                 .prefer(PayPalUtil.PREFER_HEADER)
                 .requestBody(plan);
 
@@ -238,6 +236,75 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public SubscriptionCancelResponse cancelSubscription(final SubscriptionCancelRequest subscriptionCancelRequest) {
+        if (subscriptionCancelRequest == null) {
+            log.error("Canceling is not executed because provided subscription cancel request object is null");
+            return SubscriptionCancelResponse.builder()
+                    .cancellationFlag(false)
+                    .cancellationMessage("Error! Invalid canceling data!")
+                    .build();
+        }
+
+        log.info("Canceling subscription with merchant subscription id '{}'. Reason of canceling: {}",
+                subscriptionCancelRequest.getMerchantSubscriptionId(),
+                subscriptionCancelRequest.getCancelingReason());
+
+        if (subscriptionCancelRequest.getMerchantSubscriptionId() == null ||
+                subscriptionCancelRequest.getMerchantSubscriptionId().isEmpty() ||
+                subscriptionCancelRequest.getCancelingReason() == null ||
+                subscriptionCancelRequest.getCancelingReason().isEmpty()) {
+            log.error("Canceling is not executed because provided merchant subscription id and/or canceling reason are null");
+            return SubscriptionCancelResponse.builder()
+                    .cancellationFlag(false)
+                    .cancellationMessage("Error! Please choose existing subscription and enter canceling reason.")
+                    .build();
+        }
+
+        final SubscriptionTransaction subscriptionTransaction
+                = this.subscriptionTransactionRepository.findByMerchantSubscriptionId(subscriptionCancelRequest.getMerchantSubscriptionId());
+
+        if (subscriptionTransaction == null) {
+            log.error("Canceling is not executed because subscription with merchant subscription id '{}' does not exist", subscriptionCancelRequest.getMerchantSubscriptionId());
+            return SubscriptionCancelResponse.builder()
+                    .cancellationFlag(false)
+                    .cancellationMessage("Error! Chosen subscription does not exist.")
+                    .build();
+        }
+
+        if (subscriptionTransaction.getStatus().equals(SubscriptionStatus.CANCELLED) ||
+                subscriptionTransaction.getStatus().equals(SubscriptionStatus.EXPIRED) ||
+                subscriptionTransaction.getStatus().equals(SubscriptionStatus.SUSPENDED)) {
+            log.error("Canceling is not executed because subscription with merchant subscription id '{}' is already canceled, expired or suspended", subscriptionCancelRequest.getMerchantSubscriptionId());
+            return SubscriptionCancelResponse.builder()
+                    .cancellationFlag(false)
+                    .cancellationMessage("Error! Chosen subscription is already canceled, expired or suspended.")
+                    .build();
+        }
+
+        final PostRequest<Subscription> subscriptionsCancelRequest = new SubscriptionsCancelRequest(subscriptionTransaction.getSubscriptionId())
+                .requestBody(SubscriptionCancel.builder().reason(subscriptionCancelRequest.getCancelingReason()).build());
+
+        try {
+            this.payPalUtil.sendRequest(subscriptionsCancelRequest, this.merchantPaymentDetailsService.findByMerchantId(subscriptionTransaction.getPlanEntity().getMerchant().getMerchantId()));
+        } catch (final RequestCouldNotBeExecutedException | ResourceNotFoundException e) {
+            log.error("Canceling of subscription with merchant subscription id '{}' is not executed because request to PayPal API has failed", subscriptionCancelRequest.getMerchantSubscriptionId());
+            return SubscriptionCancelResponse.builder()
+                    .cancellationFlag(false)
+                    .cancellationMessage("Error! Canceling failed due to problem in communication with PayPal API. Please try again later.")
+                    .build();
+        }
+
+        subscriptionTransaction.setStatus(SubscriptionStatus.CANCELLED);
+        this.updateTransaction(subscriptionTransaction);
+
+        log.info("Subscription with merchant subscription id '{}' is canceled successfully", subscriptionCancelRequest.getMerchantSubscriptionId());
+
+        return SubscriptionCancelResponse.builder()
+                .cancellationFlag(true)
+                .build();
+    }
+
+    @Override
     @Scheduled(initialDelay = PayPalUtil.SCHEDULER_INITIAL_DELAY_IN_SECONDS * 1000, fixedDelay = PayPalUtil.SCHEDULER_DELAY_IN_SECONDS * 1000)
     public void checkUnfinishedTransactions() {
         this.checkTransactionsByStatus(SubscriptionStatus.APPROVAL_PENDING);
@@ -256,9 +323,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 if (!subscription.getStatus().equals(subscriptionStatus.name())) {
                     this.updateTransactionStatus(subscriptionTransaction, SubscriptionStatus.valueOf(subscription.getStatus()));
                 }
-            } catch (final RequestCouldNotBeExecutedException e) {
+            } catch (final ResourceNotFoundException e) {
                 log.info("Subscription with id {} could not be found", subscriptionTransaction.getSubscriptionId());
                 this.updateTransactionStatus(subscriptionTransaction, SubscriptionStatus.SUSPENDED);
+            } catch (final RequestCouldNotBeExecutedException e) {
+                log.info("Request to PayPal API for subscription with id {} has failed because of communication problems", subscriptionTransaction.getSubscriptionId());
             }
         });
         log.info("Checking subscription transactions with status {} is completed...", subscriptionStatus.name());

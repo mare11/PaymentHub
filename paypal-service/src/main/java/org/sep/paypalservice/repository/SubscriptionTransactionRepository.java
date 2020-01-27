@@ -13,4 +13,6 @@ public interface SubscriptionTransactionRepository extends JpaRepository<Subscri
     SubscriptionTransaction findBySubscriptionId(String subscriptionId);
 
     List<SubscriptionTransaction> findAllByStatus(SubscriptionStatus subscriptionStatus);
+
+    SubscriptionTransaction findByMerchantSubscriptionId(String merchantSubscriptionId);
 }

@@ -22,4 +22,6 @@ public interface PaymentGatewayService {
     List<SubscriptionPlan> retrieveSubscriptionPlans(String merchantId);
 
     SubscriptionResponse createSubscription(SubscriptionRequest subscriptionRequest);
+
+    SubscriptionCancelResponse cancelSubscription(SubscriptionCancelRequest subscriptionCancelRequest);
 }
