@@ -1,8 +1,11 @@
 package org.sep.sellerservice.service;
 
 import org.sep.paymentgatewayservice.api.MerchantRequest;
+import org.sep.paymentgatewayservice.payment.entity.NotifyPaymentMethodRegistrationDto;
 import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 import org.sep.sellerservice.dto.MerchantPaymentMethodsDto;
+import org.sep.sellerservice.dto.MerchantRegistrationResponse;
+import org.sep.sellerservice.dto.PaymentMethodDto;
 import org.sep.sellerservice.model.Merchant;
 
 import java.util.List;
@@ -15,9 +18,13 @@ public interface MerchantService {
 
     void update(Merchant merchant);
 
-    String addPaymentMethods(MerchantPaymentMethodsDto merchantPaymentMethodsDto);
+    MerchantRegistrationResponse addPaymentMethods(MerchantPaymentMethodsDto merchantPaymentMethodsDto);
 
-    List<PaymentMethod> getSellerPaymentMethods(String id);
+    List<PaymentMethodDto> getMerchantPaymentMethodsRegistrationUrls(String id);
 
-    void enableMerchant(String merchantId);
+    List<PaymentMethod> getMerchantPaymentMethods(String id);
+
+    MerchantRegistrationResponse confirmPaymentMethodsRegistration(String id);
+
+    Boolean notifyMerchantIsRegistered(final NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto);
 }

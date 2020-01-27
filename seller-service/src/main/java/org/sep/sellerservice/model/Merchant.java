@@ -1,9 +1,6 @@
 package org.sep.sellerservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -13,12 +10,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 public class Merchant {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @EqualsAndHashCode.Include
     private String id;
 
     @Column(nullable = false)
@@ -30,9 +29,7 @@ public class Merchant {
     @Column(nullable = false)
     private String returnUrl;
 
-    @ManyToMany
-    @JoinTable(name = "merchant_payment_methods",
-            joinColumns = {@JoinColumn(name = "merchant_id")},
-            inverseJoinColumns = {@JoinColumn(name = "method_id")})
-    private Set<PaymentMethodEntity> paymentMethodEntities;
+    @OneToMany(mappedBy = "id.merchant")
+    @ToString.Exclude
+    private Set<MerchantPaymentMethod> merchantPaymentMethods;
 }

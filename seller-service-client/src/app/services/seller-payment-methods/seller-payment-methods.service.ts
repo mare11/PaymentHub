@@ -12,7 +12,15 @@ export class SellerPaymentMethodsService {
     return this.http.get('/api/payment_method');
   }
 
-  sellerPaymentMethods(sellerPaymentMethods: any) {
+  chooseMethods(sellerPaymentMethods: any) {
     return this.http.post('/api/methods_chosen', sellerPaymentMethods);
+  }
+
+  getMerchantPaymentMethodsRegistrationUrls(id: string) {
+    return this.http.get('/api/methods/registration/'.concat(id));
+  }
+
+  confirmPaymentMethodsRegistration(id: string) {
+    return this.http.post('/api/methods/registration/confirm', id);
   }
 }

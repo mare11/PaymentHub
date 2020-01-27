@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SellerPaymentMethodsService } from 'src/app/services/seller-payment-methods/seller-payment-methods.service';
 
 @Component({
@@ -13,7 +13,9 @@ export class SellerPaymentMethodsComponent implements OnInit {
   paymentMethods: any[];
   selectionProcessing = false;
 
-  constructor(private sellerService: SellerPaymentMethodsService, private route: ActivatedRoute) { }
+  constructor(private sellerService: SellerPaymentMethodsService, 
+    private route: ActivatedRoute,
+    private router: Router) { }
 
   ngOnInit() {
     this.sellerId = this.route.snapshot.paramMap.get('id');
@@ -23,7 +25,6 @@ export class SellerPaymentMethodsComponent implements OnInit {
           method.checked = false;
           return method;
         });
-
       }
     );
   }
@@ -35,10 +36,19 @@ export class SellerPaymentMethodsComponent implements OnInit {
                                                               delete method.checked;
                                                               return method;
                                                             });
+    if (sellerPaymentMethods.paymentMethods.length == 0) {
+      alert('You have to choose atleast one payment method!');
+      return;
+    }
     this.selectionProcessing = true;
-    this.sellerService.sellerPaymentMethods(sellerPaymentMethods).subscribe(
+    this.sellerService.chooseMethods(sellerPaymentMethods).subscribe(
       (response: any) => {
-        window.location.href = response.redirectionUrl;
+        if (response && response.successFlag) {
+          this.router.navigateByUrl('payment_methods/'.concat(this.sellerId))
+        } else {
+          this.selectionProcessing = false;
+          alert(response.message);
+        }
       },
       (response) => {
         this.selectionProcessing = false;

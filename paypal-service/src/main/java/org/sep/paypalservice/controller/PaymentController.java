@@ -47,8 +47,8 @@ public class PaymentController implements PaymentMethodApi {
     }
 
     @PostMapping(value = "/register_merchant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionDto> registerMerchant(@RequestBody final RegistrationDto registrationDto) {
-        return ResponseEntity.ok(RedirectionDto.builder().redirectionUrl(this.merchantPaymentDetailsService.registerMerchant(registrationDto)).build());
+    public ResponseEntity<CompleteDto> registerMerchant(@RequestBody final RegistrationDto registrationDto) {
+        return ResponseEntity.ok(this.merchantPaymentDetailsService.registerMerchant(registrationDto));
     }
 
     @PostMapping(value = "/payment_transaction", produces = MediaType.APPLICATION_JSON_VALUE)

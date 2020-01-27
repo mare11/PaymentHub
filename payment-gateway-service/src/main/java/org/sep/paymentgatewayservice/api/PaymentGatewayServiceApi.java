@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(value = "payment-gateway-service", configuration = FeignConfiguration.class)
 public interface PaymentGatewayServiceApi {
@@ -22,8 +23,8 @@ public interface PaymentGatewayServiceApi {
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest paymentRequest);
 
-    @PostMapping(value = "/payment_methods/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<String> registerPaymentMethods(@RequestBody MerchantPaymentMethods merchantPaymentMethods);
+    @PostMapping(value = "/payment_methods", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<Long, String>> retrievePaymentMethodsRegistrationUrls(@RequestBody MerchantPaymentMethods merchantPaymentMethods);
 
     @GetMapping(value = "/subscription/{merchantId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable String merchantId);

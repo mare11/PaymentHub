@@ -32,6 +32,11 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
     @Override
+    public PaymentMethodEntity findByName(final String name) {
+        return this.paymentMethodRepository.findByName(name);
+    }
+
+    @Override
     public PaymentMethod save(final PaymentMethod paymentMethod) {
         Assert.notNull(paymentMethod, "Payment method object can't be null!");
         Assert.notNull(paymentMethod.getName(), "Payment method name can't be null!");

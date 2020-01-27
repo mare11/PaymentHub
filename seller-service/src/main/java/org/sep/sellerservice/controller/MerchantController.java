@@ -2,15 +2,10 @@ package org.sep.sellerservice.controller;
 
 import org.sep.paymentgatewayservice.api.MerchantRequest;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
-import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
-import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
-import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
+import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantServiceApi;
 import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
-import org.sep.sellerservice.dto.CustomerPaymentDto;
-import org.sep.sellerservice.dto.CustomerSubscriptionDto;
-import org.sep.sellerservice.dto.MerchantPaymentMethodsDto;
+import org.sep.sellerservice.dto.*;
 import org.sep.sellerservice.model.Merchant;
 import org.sep.sellerservice.service.MerchantService;
 import org.sep.sellerservice.service.PaymentService;
@@ -64,12 +59,6 @@ public class MerchantController implements MerchantServiceApi {
     }
 
     @Override
-    public ResponseEntity<Void> enableMerchant(final String merchantId) {
-        this.merchantService.enableMerchant(merchantId);
-        return ResponseEntity.ok().build();
-    }
-
-    @Override
     public ResponseEntity<RedirectionResponse> prepareSubscription(final MerchantRequest merchantRequest) {
         final String subscriptionId = this.subscriptionService.prepareSubscription(merchantRequest);
         final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
@@ -83,9 +72,14 @@ public class MerchantController implements MerchantServiceApi {
         return ResponseEntity.ok(this.paymentService.getOrderPaymentMethod(orderId));
     }
 
+    @Override
+    public ResponseEntity<Boolean> notifyMerchantIsRegistered(final NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto) {
+        return ResponseEntity.ok(this.merchantService.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto));
+    }
+
     @PostMapping(value = "/methods_chosen", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionResponse> chooseMethods(@RequestBody final MerchantPaymentMethodsDto merchantPaymentMethodsDto) {
-        return ResponseEntity.ok(RedirectionResponse.builder().redirectionUrl(this.merchantService.addPaymentMethods(merchantPaymentMethodsDto)).build());
+    public ResponseEntity<MerchantRegistrationResponse> chooseMethods(@RequestBody final MerchantPaymentMethodsDto merchantPaymentMethodsDto) {
+        return ResponseEntity.ok(this.merchantService.addPaymentMethods(merchantPaymentMethodsDto));
     }
 
     @PostMapping(value = "/payment", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -93,9 +87,19 @@ public class MerchantController implements MerchantServiceApi {
         return ResponseEntity.ok(this.paymentService.proceedPayment(customerPaymentDto));
     }
 
+    @GetMapping(value = "/methods/registration/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<PaymentMethodDto>> getMerchantPaymentMethodsRegistrationUrls(@PathVariable final String id) {
+        return ResponseEntity.ok(this.merchantService.getMerchantPaymentMethodsRegistrationUrls(id));
+    }
+
+    @PostMapping(value = "/methods/registration/confirm", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<MerchantRegistrationResponse> confirmPaymentMethodsRegistration(@RequestBody final String id) {
+        return ResponseEntity.ok(this.merchantService.confirmPaymentMethodsRegistration(id));
+    }
+
     @GetMapping(value = "/methods/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PaymentMethod>> getSellerPaymentMethods(@PathVariable final String id) {
-        return ResponseEntity.ok(this.merchantService.getSellerPaymentMethods(id));
+    public ResponseEntity<List<PaymentMethod>> getMerchantPaymentMethods(@PathVariable final String id) {
+        return ResponseEntity.ok(this.merchantService.getMerchantPaymentMethods(id));
     }
 
     @GetMapping(value = "/subscription/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

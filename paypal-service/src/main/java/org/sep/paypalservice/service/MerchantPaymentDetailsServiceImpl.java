@@ -2,7 +2,10 @@ package org.sep.paypalservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
+import org.sep.paymentgatewayservice.payment.entity.NotifyPaymentMethodRegistrationDto;
+import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RegistrationDto;
+import org.sep.paypalservice.exceptions.MerchantAlreadyExistException;
 import org.sep.paypalservice.exceptions.NoMerchantFoundException;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
 import org.sep.paypalservice.model.*;
@@ -21,6 +24,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetailsService {
 
+    private static final String SERVICE_NAME = "PayPal";
     private static final String DIGITAL = "DIGITAL";
     private static final String MAGAZINES = "MAGAZINES";
     private final MerchantPaymentDetailsRepository merchantPaymentDetailsRepository;
@@ -61,7 +65,7 @@ public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetails
     }
 
     @Override
-    public String registerMerchant(final RegistrationDto registrationDto) throws RequestCouldNotBeExecutedException {
+    public CompleteDto registerMerchant(final RegistrationDto registrationDto) throws RequestCouldNotBeExecutedException {
         Assert.notNull(registrationDto, "Registration dto object can't be null!");
         Assert.noNullElements(
                 Stream.of(registrationDto.getClientId(),
@@ -69,6 +73,11 @@ public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetails
                         registrationDto.getMerchantId())
                         .toArray(),
                 "One or more fields are not specified.");
+
+        if (this.merchantPaymentDetailsRepository.findByMerchantId(registrationDto.getMerchantId()) != null) {
+            log.error("Merchant with id '{}' already exist", registrationDto.getMerchantId());
+            throw new MerchantAlreadyExistException(registrationDto.getMerchantId());
+        }
 
         final MerchantPaymentDetails merchantPaymentDetails = MerchantPaymentDetails.builder()
                 .clientId(registrationDto.getClientId())
@@ -92,10 +101,26 @@ public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetails
                     planEntity.getIntervalCount());
         });
 
-        final String returnUrl = this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantPaymentDetails.getMerchantId()).getBody();
-        log.info("Proceeding to next payment method is done successfully...");
 
-        return returnUrl;
+        final NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto = NotifyPaymentMethodRegistrationDto.builder()
+                .merchantId(merchantPaymentDetails.getMerchantId())
+                .methodName(SERVICE_NAME)
+                .build();
+
+        log.info("Notify payment gateway service that merchant with id '{}' is registered on payment service named '{}'",
+                notifyPaymentMethodRegistrationDto.getMerchantId(),
+                notifyPaymentMethodRegistrationDto.getMethodName());
+
+        final Boolean successFlag = this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto).getBody();
+
+        log.info("Payment gateway service response flag for merchant with id '{}' registration on payment service named '{}': {}",
+                notifyPaymentMethodRegistrationDto.getMerchantId(),
+                notifyPaymentMethodRegistrationDto.getMethodName(),
+                successFlag);
+
+        return CompleteDto.builder()
+                .successFlag(successFlag)
+                .build();
     }
 
     private List<PlanEntity> createPlanEntities(final RegistrationDto registrationDto, final MerchantPaymentDetails merchantPaymentDetails) throws RequestCouldNotBeExecutedException {
