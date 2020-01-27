@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
+import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
 import org.sep.sellerservice.exceptions.MerchantIsNotEnabledException;
 import org.sep.sellerservice.exceptions.NoMerchantFoundException;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -113,5 +115,26 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         log.info("Payment request sent to payment-gateway-service from seller-service");
         return this.paymentGatewayServiceApi.createPayment(paymentRequest).getBody();
+    }
+
+    @Override
+    public PaymentMethod getOrderPaymentMethod(String orderId) {
+        log.info("Retrieve payment with order id: {}", orderId);
+        Optional<Payment> payment = this.paymentRepository.findById(orderId);
+        if (payment.isEmpty()){
+            log.error("Payment with order id: {} not found", orderId);
+            throw new NoPaymentFoundException(orderId);
+        }
+        PaymentMethodEntity paymentMethodEntity = payment.get().getPaymentMethodEntity();
+        if (paymentMethodEntity == null){
+            log.warn("Payment method hasn't been set yet");
+            return null;
+        }
+
+        log.info("Order payment method: {} sent back to gateway", paymentMethodEntity.getName());
+        return PaymentMethod.builder()
+                .id(paymentMethodEntity.getId())
+                .name(paymentMethodEntity.getName())
+                .build();
     }
 }

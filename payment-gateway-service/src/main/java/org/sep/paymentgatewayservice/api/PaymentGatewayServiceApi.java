@@ -1,5 +1,6 @@
 package org.sep.paymentgatewayservice.api;
 
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(value = "payment-gateway-service", configuration = FeignConfiguration.class)
 public interface PaymentGatewayServiceApi {
@@ -21,12 +23,15 @@ public interface PaymentGatewayServiceApi {
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest paymentRequest);
 
-    @PostMapping(value = "/payment_methods/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<String> registerPaymentMethods(@RequestBody MerchantPaymentMethods merchantPaymentMethods);
+    @PostMapping(value = "/payment_methods", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<Long, String>> retrievePaymentMethodsRegistrationUrls(@RequestBody MerchantPaymentMethods merchantPaymentMethods);
 
     @GetMapping(value = "/subscription/{merchantId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<SubscriptionPlan>> retrieveSubscriptionPlans(@PathVariable String merchantId);
 
     @PostMapping(value = "/subscription/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody final SubscriptionRequest subscriptionRequest);
+
+    @GetMapping(value = "/order_status/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<MerchantOrderStatus> checkOrderStatus(@PathVariable String orderId);
 }

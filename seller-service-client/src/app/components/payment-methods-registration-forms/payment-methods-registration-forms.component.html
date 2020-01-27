@@ -1,0 +1,29 @@
+<div class="container-fluid row justify-content-center">
+    <div class="m-5 w-100">
+        <div class="text-center m-5">
+            <h1>Enter your credentials for each payment method</h1>
+        </div>
+        <div class="accordion" id="accordion">
+            <div class="card text-center" *ngFor="let method of paymentMethods">
+              <div class="card-header">
+                <button class="btn btn-link" style="font-size: 120%;" type="button" data-toggle="collapse" [attr.data-target]="'#' + method.name">
+                    {{method.name}}
+                </button>
+              </div>
+              <div [id]="method.name" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe class="embed-responsive-item" [src]="method.safeUrl"></iframe>
+                    </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div class="text-center m-5">
+            <button class="btn btn-primary mt-2" (click)="confirm()" [disabled]="confirmProcessing">
+                {{confirmProcessing ? 'Confirming...' : 'Confirm'}}
+                <span><img src="assets/images/Spinner-1s-32px.gif" *ngIf="confirmProcessing"></span>
+            </button>
+        </div>
+    </div>
+</div>

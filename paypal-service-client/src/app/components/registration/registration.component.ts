@@ -18,6 +18,7 @@ export class RegistrationComponent implements OnInit {
   plans: any[];
   subscription = false;
   requestProcessing = false;
+  registrationSuccess = false;
 
   constructor(private paypalService: PaypalService,
     private router: ActivatedRoute) { }
@@ -70,12 +71,20 @@ export class RegistrationComponent implements OnInit {
       });
     }
 
-    this.paypalService.registerSeller(registrationDto).subscribe(
+    this.paypalService.registerMerchant(registrationDto).subscribe(
       (response: any) => {
-        window.location.href = response.redirectionUrl;
+        if (response && response.successFlag) {
+          this.registrationSuccess = true;
+        } else {
+          this.requestProcessing = false;
+        }
       },
-      () => {
-        alert('Error!');
+      (response: any) => {
+        if (response && response.error) {
+          alert(response.error.message);
+        } else {
+          alert('Unexpected error! Please, try again.')
+        }
         this.requestProcessing = false;
       }
     )

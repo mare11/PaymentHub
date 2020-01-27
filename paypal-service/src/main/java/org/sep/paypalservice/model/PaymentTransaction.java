@@ -37,11 +37,14 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private String merchantId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String merchantOrderId;
 
     @Column
     private String payerId;
+
+    @Column
+    private String payerName;
 
     @Column
     private String item;

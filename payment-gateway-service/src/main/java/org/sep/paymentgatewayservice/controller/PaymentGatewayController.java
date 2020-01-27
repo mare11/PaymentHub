@@ -2,6 +2,7 @@ package org.sep.paymentgatewayservice.controller;
 
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.payment.entity.*;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class PaymentGatewayController implements PaymentGatewayServiceApi, PaymentMethodRegistrationApi {
@@ -34,8 +36,8 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
-    public ResponseEntity<String> registerPaymentMethods(final MerchantPaymentMethods merchantPaymentMethods) {
-        return ResponseEntity.ok(this.paymentGatewayService.registerMerchantInPaymentMethod(merchantPaymentMethods));
+    public ResponseEntity<Map<Long, String>> retrievePaymentMethodsRegistrationUrls(final MerchantPaymentMethods merchantPaymentMethods) {
+        return ResponseEntity.ok(this.paymentGatewayService.retrievePaymentMethodsRegistrationUrl(merchantPaymentMethods));
     }
 
     @Override
@@ -49,13 +51,18 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
+    public ResponseEntity<MerchantOrderStatus> checkOrderStatus(final String orderId) {
+        return ResponseEntity.ok(this.paymentGatewayService.checkOrderStatus(orderId));
+    }
+
+    @Override
     public ResponseEntity<Void> registerPaymentMethod(final PaymentMethodData paymentMethodData) {
         this.paymentGatewayService.registerPaymentMethod(paymentMethodData);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    public ResponseEntity<String> proceedToNextPaymentMethod(final String merchantId) {
-        return ResponseEntity.ok(this.paymentGatewayService.proceedToNextPaymentMethod(merchantId));
+    public ResponseEntity<Boolean> notifyMerchantIsRegistered(final NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto) {
+        return ResponseEntity.ok(this.paymentGatewayService.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto));
     }
 }

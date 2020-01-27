@@ -15,7 +15,12 @@ $(document).ready(
             data: data,
             dataType: 'text',
             success: function (response) {
-                window.location.href = response;
+                if(response === "You have registered on Bitcoin service successfully!") {
+                    alert(response);
+                    $('#submit_btn').prop('disabled', true);
+                } else {
+                    alert(response);
+                }
             }
         });
     })

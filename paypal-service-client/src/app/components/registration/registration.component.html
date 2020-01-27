@@ -1,69 +1,74 @@
 <div class="container-fluid">
-    <div class="row justify-content-center my-5">
-        <h1 class="display-4 font-italic">Please enter your PayPal credentials</h1>
+    <div class="row justify-content-center" *ngIf="registrationSuccess" style="margin-top: 8%;">
+        <h1 class="display-4 font-italic">You have registered on PayPal service successfully!</h1>
     </div>
-    <div [formGroup]="form">
-        <div class="row justify-content-center">
-            <mat-form-field>
-                <input matInput type="text" formControlName="clientId" placeholder="Client ID">
-            </mat-form-field>
+    <div *ngIf="!registrationSuccess">
+        <div class="row justify-content-center my-5">
+            <h1 class="display-4 font-italic">Please enter your PayPal credentials</h1>
         </div>
-        <div class="row justify-content-center">
-            <mat-form-field>
-                <input matInput type="text" formControlName="clientSecret" placeholder="Client Secret">
-            </mat-form-field>
-        </div>
-        <div class="row d-flex justify-content-center mt-5">
-            <h4>Do you want to enable subscription plans for your product?</h4>
-        </div>
-        <div class="row d-flex justify-content-center mt-2">
-            <mat-slide-toggle color="primary" [(ngModel)]="subscription" [ngModelOptions]="{standalone: true}">Enable subscription</mat-slide-toggle>
-        </div>
-        <div class="row d-flex justify-content-center mt-2" *ngIf="subscription">
-            <mat-form-field>
-                <input matInput type="number" 
-                formControlName="setupFee"
-                placeholder="Setup fee">
-            </mat-form-field>
-        </div>
-        <div class="row justify-content-center mat-elevation-z12 m-5" *ngIf="subscription">
-            <table mat-table [dataSource]="dataSource" class="w-100">
-                <ng-container matColumnDef="position">
-                    <th mat-header-cell *matHeaderCellDef> # </th>
-                    <td mat-cell *matCellDef="let row">{{row.position}}</td>
-                </ng-container>
-                <ng-container matColumnDef="plan">
-                    <th mat-header-cell *matHeaderCellDef> Plan </th>
-                    <td mat-cell *matCellDef="let row">{{row.plan}}</td>
-                </ng-container>
-                <ng-container matColumnDef="price">
-                    <th mat-header-cell *matHeaderCellDef> Price </th>
-                    <td mat-cell *matCellDef="let row">
-                        <mat-form-field>
-                            <input matInput 
-                            type="text" 
-                            formControlName="{{row.plan}}" 
-                            placeholder="Price"
-                            required="{{this.form.get(row.plan + ' enabled').value != null && this.form.get(row.plan + ' enabled').value}}">
-                        </mat-form-field>
-                    </td>
-                </ng-container>
-                <ng-container matColumnDef="enablePlan">
-                    <th mat-header-cell *matHeaderCellDef> Enable plan </th>
-                    <td mat-cell *matCellDef="let row">
-                        <mat-slide-toggle color="primary" formControlName="{{row.plan + ' enabled'}}" checked="{{row.plan + ' enabled'}}">Enable subscription</mat-slide-toggle>
-                    </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let element; columns: displayedColumns;"></tr>
-            </table>
-        </div>
-        <div class="row justify-content-center m-3">
-            <button mat-raised-button color="primary" type="submit" (click)="submit()" [disabled]="form.invalid || requestProcessing" class="mr-2">
-                {{requestProcessing ? 'Confirming...' : 'Confirm'}}
-              <span class="ml-2"><img src="assets/images/Spinner-1s-32px.gif" *ngIf="requestProcessing"></span>
-            </button>
-            <button mat-raised-button [mat-dialog-close] [disabled]="requestProcessing" class="ml-2">Cancel</button>
+        <div [formGroup]="form">
+            <div class="row justify-content-center">
+                <mat-form-field>
+                    <input matInput type="text" formControlName="clientId" placeholder="Client ID">
+                </mat-form-field>
+            </div>
+            <div class="row justify-content-center">
+                <mat-form-field>
+                    <input matInput type="text" formControlName="clientSecret" placeholder="Client Secret">
+                </mat-form-field>
+            </div>
+            <div class="row d-flex justify-content-center mt-5">
+                <h4>Do you want to enable subscription plans for your product?</h4>
+            </div>
+            <div class="row d-flex justify-content-center mt-2">
+                <mat-slide-toggle color="primary" [(ngModel)]="subscription" [ngModelOptions]="{standalone: true}">Enable subscription</mat-slide-toggle>
+            </div>
+            <div class="row d-flex justify-content-center mt-2" *ngIf="subscription">
+                <mat-form-field>
+                    <input matInput type="number" 
+                    formControlName="setupFee"
+                    placeholder="Setup fee">
+                </mat-form-field>
+            </div>
+            <div class="row justify-content-center mat-elevation-z12 m-5" *ngIf="subscription">
+                <table mat-table [dataSource]="dataSource" class="w-100">
+                    <ng-container matColumnDef="position">
+                        <th mat-header-cell *matHeaderCellDef> # </th>
+                        <td mat-cell *matCellDef="let row">{{row.position}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="plan">
+                        <th mat-header-cell *matHeaderCellDef> Plan </th>
+                        <td mat-cell *matCellDef="let row">{{row.plan}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="price">
+                        <th mat-header-cell *matHeaderCellDef> Price </th>
+                        <td mat-cell *matCellDef="let row">
+                            <mat-form-field>
+                                <input matInput 
+                                type="text" 
+                                formControlName="{{row.plan}}" 
+                                placeholder="Price"
+                                required="{{this.form.get(row.plan + ' enabled').value != null && this.form.get(row.plan + ' enabled').value}}">
+                            </mat-form-field>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="enablePlan">
+                        <th mat-header-cell *matHeaderCellDef> Enable plan </th>
+                        <td mat-cell *matCellDef="let row">
+                            <mat-slide-toggle color="primary" formControlName="{{row.plan + ' enabled'}}" checked="{{row.plan + ' enabled'}}">Enable subscription</mat-slide-toggle>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let element; columns: displayedColumns;"></tr>
+                </table>
+            </div>
+            <div class="row justify-content-center m-3">
+                <button mat-raised-button color="primary" type="submit" (click)="submit()" [disabled]="form.invalid || requestProcessing" class="mr-2">
+                    {{requestProcessing ? 'Confirming...' : 'Confirm'}}
+                  <span class="ml-2"><img src="assets/images/Spinner-1s-32px.gif" *ngIf="requestProcessing"></span>
+                </button>
+                <button mat-raised-button [mat-dialog-close] [disabled]="requestProcessing" class="ml-2">Cancel</button>
+            </div>
         </div>
     </div>
 </div>

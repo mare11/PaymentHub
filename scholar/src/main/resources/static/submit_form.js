@@ -48,11 +48,34 @@ $(document).ready(
             url: '/subscription',
             type: 'post',
             contentType: 'application/json',
-            data: JSON.stringify({"issn": $('#issn').val()}),
+            data: JSON.stringify({"merchantId": $('#merchantId').val()}),
             dataType: 'json',
             success: function (response) {
                 if (response && response.redirectionUrl) {
                     window.location.href = response.redirectionUrl;
+                }
+            }
+        });
+    }),
+
+    $('#submit_subscription_cancel_btn').click(function (event) {
+
+        event.preventDefault();
+
+        $.ajax({
+            url: '/subscription/cancel',
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                "merchantSubscriptionId": $('#merchantSubscriptionId').val(),
+                "cancelingReason": $('#cancelingReason').val()
+            }),
+            dataType: 'json',
+            success: function (response) {
+                if (response && response.cancellationFlag) {
+                    alert('You have canceled your subscription successfully!');
+                } else {
+                    alert(response.cancellationMessage);
                 }
             }
         });

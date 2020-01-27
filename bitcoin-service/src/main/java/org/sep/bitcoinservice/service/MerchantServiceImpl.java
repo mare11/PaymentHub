@@ -23,19 +23,14 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Override
     public Merchant findByMerchantId(String merchantId) {
-        Merchant merchant = this.merchantRepository.findByMerchantId(merchantId);
-        if (merchant != null) {
-            return merchant;
-        }else{
-            log.error("Merchant with id: {} not found", merchantId);
-            throw new NoMerchantFoundException(merchantId);
-        }
+        return this.merchantRepository.findByMerchantId(merchantId);
     }
 
     @Override
     public Merchant save(Merchant merchant) {
         if (Stream.of(merchant, merchant.getToken(), merchant.getMerchantId())
                 .anyMatch(Objects::isNull)) {
+            log.error("Merchant can't be saved");
             return null;
         }
         return this.merchantRepository.save(merchant);

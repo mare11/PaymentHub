@@ -4,10 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor

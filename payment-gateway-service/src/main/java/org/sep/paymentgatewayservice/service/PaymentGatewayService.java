@@ -1,11 +1,13 @@
 package org.sep.paymentgatewayservice.service;
 
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PaymentGatewayService {
 
@@ -15,11 +17,15 @@ public interface PaymentGatewayService {
 
     void registerPaymentMethod(PaymentMethodData paymentMethodData);
 
-    String registerMerchantInPaymentMethod(MerchantPaymentMethods merchantPaymentMethods);
+    Map<Long, String> retrievePaymentMethodsRegistrationUrl(MerchantPaymentMethods merchantPaymentMethods);
 
-    String proceedToNextPaymentMethod(String merchantId);
+    Boolean notifyMerchantIsRegistered(NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto);
 
     List<SubscriptionPlan> retrieveSubscriptionPlans(String merchantId);
 
     SubscriptionResponse createSubscription(SubscriptionRequest subscriptionRequest);
+
+    SubscriptionCancelResponse cancelSubscription(SubscriptionCancelRequest subscriptionCancelRequest);
+
+    MerchantOrderStatus checkOrderStatus(String orderId);
 }

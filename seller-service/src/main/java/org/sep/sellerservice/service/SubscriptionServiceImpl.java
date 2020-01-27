@@ -111,6 +111,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.builder()
                 .merchantId(subscription.getMerchant().getId())
                 .merchantName(subscription.getMerchant().getName())
+                .merchantSubscriptionId(subscription.getId())
                 .id(customerSubscriptionDto.getPlan().getId())
                 .totalCycles(customerSubscriptionDto.getPlan().getTotalCycles())
                 .returnUrl(subscription.getReturnUrl())
