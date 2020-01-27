@@ -1,6 +1,7 @@
 package org.sep.bitcoinservice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sep.bitcoinservice.exceptions.NoMerchantFoundException;
 import org.sep.bitcoinservice.model.*;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
@@ -57,6 +58,10 @@ public class BitcoinServiceImpl implements BitcoinService {
                     .build();
 
             final Merchant merchant = this.merchantService.findByMerchantId(paymentRequest.getMerchantId());
+            if (merchant == null){
+                log.error("Merchant with id: {} not found", paymentRequest.getMerchantId());
+                throw new NoMerchantFoundException(paymentRequest.getMerchantId());
+            }
             log.info("Merchant with id:{} is retrieved", merchant.getMerchantId());
 
             final HttpHeaders headers = new HttpHeaders();
@@ -135,17 +140,36 @@ public class BitcoinServiceImpl implements BitcoinService {
     }
 
     @Override
-    public Boolean registerMerchant(final Merchant merchant) {
-        this.merchantService.save(merchant);
-        log.info("Merchant with id: {} is created", merchant.getMerchantId());
-        NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto = NotifyPaymentMethodRegistrationDto.builder()
-                .merchantId(merchant.getMerchantId())
-                .methodName(SERVICE_NAME)
-                .build();
-        return this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto).getBody();
+    public String registerMerchant(final Merchant merchant) {
+        try {
+            final HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Token " + merchant.getToken());
+            final HttpEntity requestEntity = new HttpEntity(headers);
+            this.restTemplate.exchange("https://api-sandbox.coingate.com/v2/orders", HttpMethod.GET, requestEntity, Void.class);
+            if (merchantService.findByMerchantId(merchant.getMerchantId()) != null) {
+                log.error("Merchant with id: {} already exist", merchant.getMerchantId());
+                return "Merchant id already exist";
+            }
+            this.merchantService.save(merchant);
+            log.info("Merchant with id: {} is created", merchant.getMerchantId());
+            NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto = NotifyPaymentMethodRegistrationDto.builder()
+                    .merchantId(merchant.getMerchantId())
+                    .methodName(SERVICE_NAME)
+                    .build();
+            log.info("Notify gateway service");
+            Boolean flag = this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto).getBody();
+            if (flag){
+                return "You have registered on Bitcoin service successfully!";
+            }else{
+                return "Error while registering on Bitcoin service";
+            }
+        }catch (final HttpClientErrorException e){
+            log.error("Merchant token: {} doesn't exist", merchant.getToken());
+            return "Merchant with this token doesn't exist on CoinGate";
+        }
     }
 
-    @Scheduled(fixedDelay = 30000)
+    @Scheduled(fixedDelay = 30000, initialDelay = 10000)
     public void updateTransaction() {
         log.info("Start transaction checking");
         List<Transaction> transactionsInProgress = this.transactionService.findByStatus(MerchantOrderStatus.IN_PROGRESS);

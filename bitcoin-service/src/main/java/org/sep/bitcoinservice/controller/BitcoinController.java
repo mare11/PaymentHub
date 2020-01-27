@@ -42,7 +42,7 @@ public class BitcoinController implements PaymentMethodApi {
     }
 
     @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Boolean> registerSeller(@RequestBody final Merchant merchant) {
+    public ResponseEntity<String> registerSeller(@RequestBody final Merchant merchant) {
         return ResponseEntity.ok(this.bitcoinService.registerMerchant(merchant));
     }
 }

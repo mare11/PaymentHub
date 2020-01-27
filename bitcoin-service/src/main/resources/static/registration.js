@@ -15,10 +15,11 @@ $(document).ready(
             data: data,
             dataType: 'text',
             success: function (response) {
-                if(response) {
-                    alert("You have registered on Bitcoin service successfully!");
+                if(response === "You have registered on Bitcoin service successfully!") {
+                    alert(response);
+                    $('#submit_btn').prop('disabled', true);
                 } else {
-                    alert("Error while registering on Bitcoin service");
+                    alert(response);
                 }
             }
         });

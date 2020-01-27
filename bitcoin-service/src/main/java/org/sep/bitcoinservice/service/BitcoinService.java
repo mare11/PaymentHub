@@ -15,5 +15,5 @@ public interface BitcoinService {
 
     String retrieveMerchantRegistrationUrl(String merchantId);
 
-    Boolean registerMerchant(Merchant merchant);
+    String registerMerchant(Merchant merchant);
 }
