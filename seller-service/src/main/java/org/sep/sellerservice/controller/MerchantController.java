@@ -78,6 +78,11 @@ public class MerchantController implements MerchantServiceApi {
         return ResponseEntity.ok(redirectionResponse);
     }
 
+    @Override
+    public ResponseEntity<PaymentMethod> getOrderPaymentMethod(String orderId) {
+        return ResponseEntity.ok(this.paymentService.getOrderPaymentMethod(orderId));
+    }
+
     @PostMapping(value = "/methods_chosen", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RedirectionResponse> chooseMethods(@RequestBody final MerchantPaymentMethodsDto merchantPaymentMethodsDto) {
         return ResponseEntity.ok(RedirectionResponse.builder().redirectionUrl(this.merchantService.addPaymentMethods(merchantPaymentMethodsDto)).build());

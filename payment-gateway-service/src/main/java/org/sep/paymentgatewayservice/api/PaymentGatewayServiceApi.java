@@ -1,5 +1,6 @@
 package org.sep.paymentgatewayservice.api;
 
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -29,4 +30,7 @@ public interface PaymentGatewayServiceApi {
 
     @PostMapping(value = "/subscription/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody final SubscriptionRequest subscriptionRequest);
+
+    @GetMapping(value = "/order_status/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<MerchantOrderStatus> checkOrderStatus(@PathVariable String orderId);
 }

@@ -56,7 +56,6 @@ public class BitcoinServiceImpl implements BitcoinService {
                     .description(paymentRequest.getDescription())
                     .success_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/success_payment?orderId=" + paymentRequest.getMerchantOrderId())
                     .cancel_url(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.SERVER_PORT + "/cancel_payment?orderId=" + paymentRequest.getMerchantOrderId())
-                    .order_id(paymentRequest.getMerchantOrderId())
                     .build();
 
             final Merchant merchant = this.merchantService.findByMerchantId(paymentRequest.getMerchantId());
@@ -73,7 +72,7 @@ public class BitcoinServiceImpl implements BitcoinService {
 
             final Transaction transaction = Transaction.builder()
                     .merchant(merchant)
-                    .orderId(cgResponse.getOrder_id())
+                    .orderId(paymentRequest.getMerchantOrderId())
                     .cgId(cgResponse.getId())
                     .item(paymentRequest.getItem())
                     .price(cgResponse.getPrice_amount())
@@ -125,7 +124,9 @@ public class BitcoinServiceImpl implements BitcoinService {
 
     @Override
     public MerchantOrderStatus getOrderStatus(String orderId) {
+        log.info("Retrieve transaction with order id: {}", orderId);
         Transaction transaction = this.transactionService.findByOrderId(orderId);
+        log.info("Transaction status sent back to gateway");
         return transaction.getStatus();
     }
 

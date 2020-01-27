@@ -3,6 +3,7 @@ package org.sep.paymentgatewayservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.exceptions.NoPaymentMethodFoundException;
+import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.SubscriptionApi;
@@ -129,6 +130,28 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public SubscriptionCancelResponse cancelSubscription(final SubscriptionCancelRequest subscriptionCancelRequest) {
         log.info("Calling paypal service to cancel subscription with merchant subscription id '{}'", subscriptionCancelRequest.getMerchantSubscriptionId());
         return this.subscriptionApi.cancelSubscription(subscriptionCancelRequest).getBody();
+    }
+
+    @Override
+    public MerchantOrderStatus checkOrderStatus(final String orderId) {
+        Assert.notNull(orderId, "Order id can't be null!");
+        log.info("Order (id: {}) payment method request sent to seller service", orderId);
+        PaymentMethod paymentMethod = this.merchantServiceApi.getOrderPaymentMethod(orderId).getBody();
+        if (paymentMethod == null){
+            log.warn("Payment method hasn't been set yet");
+            return MerchantOrderStatus.IN_PROGRESS;
+        }
+
+        final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentMethod.getName());
+
+        if (paymentMethodData == null) {
+            log.error("Payment method not found");
+            throw new NoPaymentMethodFoundException(paymentMethod.getName());
+        }
+
+        final URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
+        log.info("Check order status request sent to {} payment method from gateway", paymentMethodData.getName());
+        return this.paymentMethodApi.getOrderStatus(serviceBaseUri, orderId).getBody();
     }
 
     private String registerMerchant(final String merchantId) {
