@@ -1,8 +1,8 @@
 package org.sep.bankservice.controller;
 
 import org.sep.bankservice.service.BankService;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;

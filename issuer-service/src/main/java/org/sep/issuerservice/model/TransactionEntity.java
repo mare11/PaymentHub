@@ -6,12 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 import org.sep.pccservice.api.TransactionStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -21,16 +19,21 @@ import java.util.UUID;
 public class TransactionEntity {
 
     @Id
-    @Type(type = "org.hibernate.type.UUIDCharType")
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    private UUID id;
+    private String id;
 
     @Column(precision = 10, scale = 2, nullable = false)
     private Double amount;
 
     @CreationTimestamp
     private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private String acquirerOrderId;
+
+    @Column
+    private LocalDateTime acquirerTimestamp;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

@@ -3,7 +3,7 @@ package org.sep.pccservice.api;
 public enum TransactionStatus {
     OPEN,
     SUBMITTED,
-    ACCEPTED,
+    EXECUTED,
     EXPIRED,
     CANCELED,
     FAILED

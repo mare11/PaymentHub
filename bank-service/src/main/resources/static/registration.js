@@ -16,7 +16,8 @@ $(document).ready(
             data: data,
             dataType: 'text',
             success: function (response) {
-                window.location.href = response;
+                // window.location.href = response;
+                alert(response);
             }
         });
     })

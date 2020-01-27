@@ -3,6 +3,7 @@ package org.sep.pccservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.pccservice.api.PccRequest;
 import org.sep.pccservice.api.PccResponse;
+import org.sep.pccservice.api.TransactionStatus;
 import org.sep.pccservice.exception.InvalidDataException;
 import org.sep.pccservice.model.Transaction;
 import org.sep.pccservice.repository.TransactionRepository;
@@ -36,6 +37,14 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public TransactionStatus getTransactionStatus(String acquirerOrderId) {
+        log.info("Fetching transaction status from issuer for acquirer order id: {}", acquirerOrderId);
+        TransactionStatus response = this.restTemplate.getForObject(getIssuerUrl().concat("/").concat(acquirerOrderId), TransactionStatus.class);
+        log.info("Got response from the issuer: {}", response);
+        return response;
+    }
+
+    @Override
     public PccResponse forwardRequest(PccRequest request) {
         log.info("Forwarding from acquirer to issuer for request: {}", request);
         assertAllNotNull(request, request.getAcquirerOrderId(), request.getAcquirerTimestamp(), request.getAmount(),
@@ -54,7 +63,7 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(transaction);
 
         HttpEntity<PccRequest> requestEntity = new HttpEntity<>(request);
-        ResponseEntity<PccResponse> responseEntity = this.restTemplate.exchange(getUrl(), HttpMethod.POST, requestEntity, PccResponse.class);
+        ResponseEntity<PccResponse> responseEntity = this.restTemplate.exchange(getIssuerUrl(), HttpMethod.POST, requestEntity, PccResponse.class);
         PccResponse response = responseEntity.getBody();
         log.info("Got response from the issuer: {}", response);
         return response;
@@ -66,7 +75,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private String getUrl() {
+    private String getIssuerUrl() {
         return HTTPS_PREFIX + issuerHost + ":" + issuerPort;
     }
 }

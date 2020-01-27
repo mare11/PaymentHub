@@ -8,8 +8,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TransactionRepository extends JpaRepository<TransactionEntity, Long> {
+public interface TransactionRepository extends JpaRepository<TransactionEntity, String> {
 
     List<TransactionEntity> findAllByStatus(TransactionStatus status);
+
+    TransactionEntity findByAcquirerOrderId(String acquirerOrderId);
 
 }

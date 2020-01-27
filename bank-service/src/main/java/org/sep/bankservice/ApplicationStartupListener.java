@@ -17,7 +17,7 @@ import java.time.ZoneId;
 @Component
 public class ApplicationStartupListener implements ApplicationListener<ApplicationReadyEvent> {
 
-    private static final String SERVICE_NAME = "Bank";
+    public static final String SERVICE_NAME = "Bank";
     @Value("${spring.application.name}")
     private String serviceHost;
     @Value("${server.port}")
@@ -37,6 +37,6 @@ public class ApplicationStartupListener implements ApplicationListener<Applicati
                 .host(this.serviceHost)
                 .port(Integer.valueOf(this.servicePort))
                 .build();
-//        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
+        this.paymentMethodRegistrationApi.registerPaymentMethod(paymentMethodData);
     }
 }

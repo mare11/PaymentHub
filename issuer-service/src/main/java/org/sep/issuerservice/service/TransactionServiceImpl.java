@@ -8,6 +8,7 @@ import org.sep.issuerservice.repository.CardRepository;
 import org.sep.issuerservice.repository.TransactionRepository;
 import org.sep.pccservice.api.PccRequest;
 import org.sep.pccservice.api.PccResponse;
+import org.sep.pccservice.api.TransactionStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,16 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionServiceImpl(CardRepository cardRepository, TransactionRepository transactionRepository) {
         this.cardRepository = cardRepository;
         this.transactionRepository = transactionRepository;
+    }
+
+    @Override
+    public TransactionStatus getTransactionStatus(String acquirerOrderId) {
+        TransactionEntity transaction = transactionRepository.findByAcquirerOrderId(acquirerOrderId);
+        if (transaction == null) {
+            log.error("Transaction not found for acquirer order id: {}", acquirerOrderId);
+            return null;
+        }
+        return transaction.getStatus();
     }
 
     @Override
@@ -62,6 +73,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         TransactionEntity transaction = TransactionEntity.builder()
                 .amount(request.getAmount())
+                .acquirerOrderId(request.getAcquirerOrderId())
+                .acquirerTimestamp(request.getAcquirerTimestamp())
                 .card(card)
                 .status(SUBMITTED)
                 .build();
@@ -71,7 +84,7 @@ public class TransactionServiceImpl implements TransactionService {
         return PccResponse.builder()
                 .acquirerOrderId(request.getAcquirerOrderId())
                 .acquirerTimestamp(request.getAcquirerTimestamp())
-                .issuerOrderId(transaction.getId().toString())
+                .issuerOrderId(transaction.getId())
                 .issuerTimestamp(transaction.getTimestamp())
                 .success(true)
                 .build();

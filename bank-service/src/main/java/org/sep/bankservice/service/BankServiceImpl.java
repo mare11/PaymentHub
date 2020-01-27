@@ -6,10 +6,11 @@ import org.sep.bankservice.exception.MerchantNotFoundException;
 import org.sep.bankservice.model.*;
 import org.sep.bankservice.repository.MerchantRepository;
 import org.sep.bankservice.repository.TransactionRepository;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
+import org.sep.paymentgatewayservice.payment.entity.NotifyPaymentMethodRegistrationDto;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static org.sep.paymentgatewayservice.method.api.MerchantOrderStatus.*;
+import static org.sep.bankservice.ApplicationStartupListener.SERVICE_NAME;
 import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.CREATED;
 import static org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus.ERROR;
+import static org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus.*;
 
 @Slf4j
 @Service
@@ -122,14 +124,25 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public String registerMerchant(final Merchant merchant) {
+        if (merchantRepository.findByMerchantId(merchant.getMerchantId()) != null) {
+            log.error("Merchant with merchantId: {} already exists!", merchant.getMerchantId());
+            return "NO NO!";
+        }
         MerchantEntity merchantEntity = MerchantEntity.builder()
                 .merchantId(merchant.getMerchantId())
                 .bankMerchantId(merchant.getBankMerchantId())
                 .bankMerchantPassword(merchant.getBankMerchantPassword())
                 .build();
+
         this.merchantRepository.save(merchantEntity);
         log.info("Merchant (merchantId: {}) registered!", merchantEntity.getMerchantId());
-        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchantEntity.getMerchantId()).getBody();
+        Boolean success = this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(
+                NotifyPaymentMethodRegistrationDto.builder()
+                        .merchantId(merchant.getMerchantId())
+                        .methodName(SERVICE_NAME)
+                        .build()
+        ).getBody();
+        return success != null && success ? "SUCCESS!" : "NO NO!";
     }
 
     @Override
