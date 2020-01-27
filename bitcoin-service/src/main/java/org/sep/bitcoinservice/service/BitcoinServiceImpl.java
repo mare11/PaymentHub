@@ -2,13 +2,10 @@ package org.sep.bitcoinservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.sep.bitcoinservice.model.*;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
-import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
-import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
-import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
+import org.sep.paymentgatewayservice.payment.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,6 +23,7 @@ import java.util.List;
 @Service
 public class BitcoinServiceImpl implements BitcoinService {
 
+    private static final String SERVICE_NAME = "Bitcoin";
     private static final String HTTPS_PREFIX = "https://";
     @Value("${ip.address}")
     private String SERVER_ADDRESS;
@@ -137,10 +135,14 @@ public class BitcoinServiceImpl implements BitcoinService {
     }
 
     @Override
-    public String registerMerchant(final Merchant merchant) {
+    public Boolean registerMerchant(final Merchant merchant) {
         this.merchantService.save(merchant);
         log.info("Merchant with id: {} is created", merchant.getMerchantId());
-        return this.paymentMethodRegistrationApi.proceedToNextPaymentMethod(merchant.getMerchantId()).getBody();
+        NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto = NotifyPaymentMethodRegistrationDto.builder()
+                .merchantId(merchant.getMerchantId())
+                .methodName(SERVICE_NAME)
+                .build();
+        return this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto).getBody();
     }
 
     @Scheduled(fixedDelay = 30000)

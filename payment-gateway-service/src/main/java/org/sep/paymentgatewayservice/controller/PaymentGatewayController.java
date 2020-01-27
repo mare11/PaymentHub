@@ -2,7 +2,7 @@ package org.sep.paymentgatewayservice.controller;
 
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.payment.entity.*;

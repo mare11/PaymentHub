@@ -3,7 +3,7 @@ package org.sep.paymentgatewayservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.exceptions.NoPaymentMethodFoundException;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.SubscriptionApi;

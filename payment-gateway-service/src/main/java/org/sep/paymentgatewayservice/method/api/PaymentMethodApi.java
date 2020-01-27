@@ -1,5 +1,6 @@
 package org.sep.paymentgatewayservice.method.api;
 
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;

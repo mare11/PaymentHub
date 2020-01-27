@@ -2,8 +2,8 @@ package org.sep.bitcoinservice.controller;
 
 import org.sep.bitcoinservice.model.Merchant;
 import org.sep.bitcoinservice.service.BitcoinService;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class BitcoinController implements PaymentMethodApi {
     }
 
     @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerSeller(@RequestBody final Merchant merchant) {
+    public ResponseEntity<Boolean> registerSeller(@RequestBody final Merchant merchant) {
         return ResponseEntity.ok(this.bitcoinService.registerMerchant(merchant));
     }
 }

@@ -1,7 +1,7 @@
 package org.sep.bitcoinservice.service;
 
 import org.sep.bitcoinservice.model.Transaction;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 
 import java.util.List;
 
