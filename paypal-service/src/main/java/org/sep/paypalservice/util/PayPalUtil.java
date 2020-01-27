@@ -42,12 +42,16 @@ public class PayPalUtil {
     }
 
     private PayPalHttpClient getHttpClient(final MerchantPaymentDetails merchantPaymentDetails) {
-        final PayPalEnvironment environment = new PayPalEnvironment.Sandbox(merchantPaymentDetails.getClientId(), merchantPaymentDetails.getClientSecret());
-        log.info("Environment is created...");
+        final PayPalEnvironment environment = this.getPayPalEnvironment(merchantPaymentDetails.getClientId(), merchantPaymentDetails.getClientSecret());
 
         final PayPalHttpClient httpClient = new PayPalHttpClient(environment);
         log.info("HttpClient is created...");
         return httpClient;
+    }
+
+    public PayPalEnvironment getPayPalEnvironment(final String clientId, final String clientSecret) {
+        log.info("Environment is created...");
+        return new PayPalEnvironment.Sandbox(clientId, clientSecret);
     }
 
     public <T> T sendRequest(final HttpRequest<T> request, final MerchantPaymentDetails merchantPaymentDetails)

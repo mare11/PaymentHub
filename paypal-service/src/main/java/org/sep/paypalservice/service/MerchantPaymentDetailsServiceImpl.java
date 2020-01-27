@@ -1,10 +1,14 @@
 package org.sep.paypalservice.service;
 
+import com.paypal.core.PayPalEnvironment;
+import com.paypal.core.PayPalHttpClient;
+import com.paypal.core.request.AccessTokenRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodRegistrationApi;
 import org.sep.paymentgatewayservice.payment.entity.NotifyPaymentMethodRegistrationDto;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RegistrationDto;
+import org.sep.paypalservice.exceptions.InvalidCredentialsException;
 import org.sep.paypalservice.exceptions.MerchantAlreadyExistException;
 import org.sep.paypalservice.exceptions.NoMerchantFoundException;
 import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
@@ -16,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -77,6 +82,18 @@ public class MerchantPaymentDetailsServiceImpl implements MerchantPaymentDetails
         if (this.merchantPaymentDetailsRepository.findByMerchantId(registrationDto.getMerchantId()) != null) {
             log.error("Merchant with id '{}' already exist", registrationDto.getMerchantId());
             throw new MerchantAlreadyExistException(registrationDto.getMerchantId());
+        }
+
+        final PayPalEnvironment payPalEnvironment = this.payPalUtil.getPayPalEnvironment(registrationDto.getClientId(), registrationDto.getClientSecret());
+        final PayPalHttpClient httpClient = new PayPalHttpClient(payPalEnvironment);
+        final AccessTokenRequest accessTokenRequest = new AccessTokenRequest(payPalEnvironment);
+
+        try {
+            log.info("Check entered client id and client secret for merchant with id '{}'", registrationDto.getMerchantId());
+            httpClient.execute(accessTokenRequest);
+        } catch (final IOException e) {
+            log.error("Invalid client id and client secret for merchant with id '{}'", registrationDto.getMerchantId());
+            throw new InvalidCredentialsException();
         }
 
         final MerchantPaymentDetails merchantPaymentDetails = MerchantPaymentDetails.builder()

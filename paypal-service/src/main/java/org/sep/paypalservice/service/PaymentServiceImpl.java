@@ -2,8 +2,8 @@ package org.sep.paypalservice.service;
 
 import com.paypal.orders.*;
 import lombok.extern.slf4j.Slf4j;
-import org.sep.paymentgatewayservice.method.api.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.CreatePaymentStatus;
+import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
 import org.sep.paypalservice.dto.CompleteDto;
