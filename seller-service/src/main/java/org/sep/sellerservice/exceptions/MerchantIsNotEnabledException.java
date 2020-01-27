@@ -9,6 +9,6 @@ public class MerchantIsNotEnabledException extends RuntimeException {
     private static final long serialVersionUID = -2056469098993063091L;
 
     public MerchantIsNotEnabledException(final String merchantId) {
-        super("Merchant with merchant id number " + merchantId + " is not enabled yet!");
+        super("Merchant with merchant id " + merchantId + " is not enabled yet!");
     }
 }

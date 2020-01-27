@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class PaymentGatewayController implements PaymentGatewayServiceApi, PaymentMethodRegistrationApi {
@@ -34,8 +35,8 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
-    public ResponseEntity<String> registerPaymentMethods(final MerchantPaymentMethods merchantPaymentMethods) {
-        return ResponseEntity.ok(this.paymentGatewayService.registerMerchantInPaymentMethod(merchantPaymentMethods));
+    public ResponseEntity<Map<Long, String>> retrievePaymentMethodsRegistrationUrls(final MerchantPaymentMethods merchantPaymentMethods) {
+        return ResponseEntity.ok(this.paymentGatewayService.retrievePaymentMethodsRegistrationUrl(merchantPaymentMethods));
     }
 
     @Override
@@ -55,7 +56,7 @@ public class PaymentGatewayController implements PaymentGatewayServiceApi, Payme
     }
 
     @Override
-    public ResponseEntity<String> proceedToNextPaymentMethod(final String merchantId) {
-        return ResponseEntity.ok(this.paymentGatewayService.proceedToNextPaymentMethod(merchantId));
+    public ResponseEntity<Boolean> notifyMerchantIsRegistered(final NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto) {
+        return ResponseEntity.ok(this.paymentGatewayService.notifyMerchantIsRegistered(notifyPaymentMethodRegistrationDto));
     }
 }
