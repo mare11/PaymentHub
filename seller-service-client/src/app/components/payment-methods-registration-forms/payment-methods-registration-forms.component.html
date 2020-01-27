@@ -1,29 +1,36 @@
-<div class="container-fluid row justify-content-center">
-    <div class="m-5 w-100">
-        <div class="text-center m-5">
-            <h1>Enter your credentials for each payment method</h1>
-        </div>
-        <div class="accordion" id="accordion">
-            <div class="card text-center" *ngFor="let method of paymentMethods">
-              <div class="card-header">
-                <button class="btn btn-link" style="font-size: 120%;" type="button" data-toggle="collapse" [attr.data-target]="'#' + method.name">
+<div class="container-fluid" style="height: 100vh;">
+    <div class="text-center">
+        <h1 class="display-4 pt-4">Enter your credentials for each payment method</h1>
+    </div>
+    <hr class="my-4">
+    <div class="row">
+        <div class="col-3">
+            <div class="list-group" role="tablist">
+                <a *ngFor="let method of paymentMethods; let i = index;" 
+                    class="list-group-item list-group-item-action list-group-item-primary"
+                    [ngClass]="{active: i == 0}"
+                    data-toggle="list" [href]="'#' + method.name" role="tab">
                     {{method.name}}
+                </a>
+            </div>
+            <div class="row justify-content-center mt-5">
+                <button class="btn btn-primary px-4" (click)="confirm()" [disabled]="confirmProcessing" style="font-size: 120%;">
+                    {{confirmProcessing ? 'Confirming...' : 'Confirm'}}
+                    <span><img src="assets/images/Spinner-1s-32px.gif" *ngIf="confirmProcessing"></span>
                 </button>
-              </div>
-              <div [id]="method.name" class="collapse" data-parent="#accordion">
-                <div class="card-body">
-                    <div class="embed-responsive embed-responsive-16by9">
+            </div>
+        </div>
+        <div class="col-9">
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade border border-primary"
+                    style="border-width: 2px !important;"
+                    [id]="method.name" role="tabpanel" *ngFor="let method of paymentMethods; let i = index;"
+                    [ngClass]="{show: i == 0, active: i == 0}">
+                    <div class="embed-responsive embed-responsive-21by9">
                         <iframe class="embed-responsive-item" [src]="method.safeUrl"></iframe>
                     </div>
                 </div>
-              </div>
             </div>
-        </div>
-        <div class="text-center m-5">
-            <button class="btn btn-primary mt-2" (click)="confirm()" [disabled]="confirmProcessing">
-                {{confirmProcessing ? 'Confirming...' : 'Confirm'}}
-                <span><img src="assets/images/Spinner-1s-32px.gif" *ngIf="confirmProcessing"></span>
-            </button>
         </div>
     </div>
 </div>
