@@ -17,5 +17,4 @@ public class Transaction {
     private Double amount;
     private String description;
     private LocalDate timestamp;
-    private Long cardId;
 }

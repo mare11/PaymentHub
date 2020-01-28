@@ -1,12 +1,12 @@
 package org.sep.bankservice.controller;
 
 import org.sep.bankservice.model.Merchant;
+import org.sep.bankservice.model.TransactionResponse;
 import org.sep.bankservice.service.BankService;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +22,15 @@ public class ClientSideController {
     }
 
     @GetMapping(value = "/registration")
-    public String registration(@RequestParam("issn") final String issn, final Model model) {
-        model.addAttribute("issn", issn);
+    public String registration(@RequestParam("merchantId") final String merchantId, final Model model) {
+        model.addAttribute("merchantId", merchantId);
         return "registration";
+    }
+
+    @ResponseBody
+    @PostMapping(value = "/register_merchant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public TransactionResponse registerMerchant(@RequestBody final Merchant merchant) {
+        return this.bankService.registerMerchant(merchant);
     }
 
     @GetMapping(value = "/success_payment")
@@ -39,11 +45,5 @@ public class ClientSideController {
         model.addAttribute("returnUrl", this.bankService.completePayment(new PaymentCompleteRequest(orderId, PaymentStatus.CANCEL)));
         model.addAttribute("message", "Your payment is canceled!");
         return "payment_completed";
-    }
-
-    @ResponseBody
-    @PostMapping(value = "/register_seller", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerSeller(@RequestBody final Merchant merchant) {
-        return ResponseEntity.ok(this.bankService.registerSeller(merchant));
     }
 }

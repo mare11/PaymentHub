@@ -3,20 +3,25 @@ $(document).ready(
 
         event.preventDefault();
         let data = JSON.stringify({
-            "id": $('#cardId').val(), "pan": $('#pan').val(), "ccv": $('#ccv').val(),
+            "pan": $('#pan').val(), "ccv": $('#ccv').val(),
             "expirationDate": $('#date').val(), "cardholderName": $('#name').val()
         });
         console.log(data);
 
         $.ajax({
-            url: '/transaction/execute/' + $('#id').val(),
+            url: '/transaction/submit/' + $('#id').val(),
             type: 'post',
             contentType: 'application/json',
             data: data,
             dataType: 'json',
             success: function (response) {
-                if (response && response.paymentUrl) {
-                    window.location.href = response.paymentUrl;
+                if (response) {
+                    alert(response.message);
+                    if (response.paymentUrl) {
+                        window.location.href = response.paymentUrl;
+                    }
+                } else {
+                    alert('An unexpected error occurred!');
                 }
             }
         });

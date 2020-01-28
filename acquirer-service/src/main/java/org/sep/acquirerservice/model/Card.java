@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Card {
-    private Long id;
     private String pan;
     private String ccv;
     private LocalDate expirationDate;

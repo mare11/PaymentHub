@@ -1,9 +1,7 @@
 package org.sep.acquirerservice.service;
 
-import org.sep.acquirerservice.model.Card;
-import org.sep.acquirerservice.model.Transaction;
-import org.sep.acquirerservice.model.TransactionRequest;
-import org.sep.acquirerservice.model.TransactionResponse;
+import org.sep.acquirerservice.model.*;
+import org.sep.pccservice.api.TransactionStatus;
 
 public interface AcquirerService {
 
@@ -11,5 +9,9 @@ public interface AcquirerService {
 
     Transaction getTransactionById(String id);
 
-    TransactionResponse executeTransaction(String id, Card card);
+    TransactionResponse submitTransaction(String id, Card card);
+
+    TransactionStatus getTransactionStatus(String id);
+
+    Boolean checkClientExistence(Client client);
 }

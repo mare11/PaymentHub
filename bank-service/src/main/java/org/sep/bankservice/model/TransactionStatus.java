@@ -1,7 +1,10 @@
 package org.sep.bankservice.model;
 
 public enum TransactionStatus {
-    NEW,
-    FINISHED,
-    CANCELED;
+    OPEN,
+    SUBMITTED,
+    EXECUTED,
+    EXPIRED,
+    CANCELED,
+    FAILED
 }
