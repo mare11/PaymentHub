@@ -76,12 +76,21 @@ public class BankServiceImpl implements BankService {
 
         log.info("Sending request (merchantId: {}, item: {}) to acquirer", merchant.getMerchantId(), paymentRequest.getItem());
         final HttpEntity<TransactionRequest> requestEntity = new HttpEntity<>(transactionRequest);
-        final ResponseEntity<TransactionResponse> responseEntity = this.restTemplate.exchange(getAcquirerUrl(), HttpMethod.POST, requestEntity, TransactionResponse.class);
-
+        ResponseEntity<TransactionResponse> responseEntity;
+        try {
+            responseEntity = this.restTemplate.exchange(getAcquirerUrl(), HttpMethod.POST, requestEntity, TransactionResponse.class);
+        } catch (Exception e) {
+            log.error("Got exception when calling acquirer: {}", e.getMessage());
+            return PaymentResponse.builder()
+                    .paymentUrl(paymentRequest.getReturnUrl())
+                    .status(ERROR)
+                    .build();
+        }
         final TransactionResponse response = responseEntity.getBody();
         if (response == null || !response.isSuccess()) {
             log.error("Wrong response from acquirer (merchantId: {}, orderId: {})", merchant.getMerchantId(), paymentRequest.getMerchantOrderId());
             return PaymentResponse.builder()
+                    .paymentUrl(paymentRequest.getReturnUrl())
                     .status(ERROR)
                     .build();
         }
@@ -123,26 +132,59 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    public String registerMerchant(final Merchant merchant) {
-        if (merchantRepository.findByMerchantId(merchant.getMerchantId()) != null) {
-            log.error("Merchant with merchantId: {} already exists!", merchant.getMerchantId());
-            return "NO NO!";
+    public TransactionResponse registerMerchant(final Merchant merchant) {
+        if (merchantRepository.findByBankMerchantId(merchant.getBankMerchantId()) != null) {
+            log.error("Merchant (bank merchant id: {}) already exists!", merchant.getBankMerchantId());
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("Merchant with entered credentials already exists!")
+                    .build();
         }
-        MerchantEntity merchantEntity = MerchantEntity.builder()
-                .merchantId(merchant.getMerchantId())
-                .bankMerchantId(merchant.getBankMerchantId())
-                .bankMerchantPassword(merchant.getBankMerchantPassword())
-                .build();
+        final HttpEntity<Merchant> requestEntity = new HttpEntity<>(merchant);
+        ResponseEntity<Boolean> responseEntity;
+        try {
+            responseEntity = this.restTemplate.exchange(getAcquirerUrl().concat("/client"), HttpMethod.POST, requestEntity, Boolean.class);
+        } catch (Exception e) {
+            log.error("Got exception when calling acquirer: {}", e.getMessage());
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("An unexpected error occurred!")
+                    .build();
+        }
 
-        this.merchantRepository.save(merchantEntity);
-        log.info("Merchant (merchantId: {}) registered!", merchantEntity.getMerchantId());
+        Boolean exists = responseEntity.getBody();
+        if (exists == null || !exists) {
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("Entered credentials are not valid within the bank!")
+                    .build();
+        }
+
         Boolean success = this.paymentMethodRegistrationApi.notifyMerchantIsRegistered(
                 NotifyPaymentMethodRegistrationDto.builder()
                         .merchantId(merchant.getMerchantId())
                         .methodName(SERVICE_NAME)
                         .build()
         ).getBody();
-        return success != null && success ? "SUCCESS!" : "NO NO!";
+
+        if (success != null && success) {
+            MerchantEntity merchantEntity = MerchantEntity.builder()
+                    .merchantId(merchant.getMerchantId())
+                    .bankMerchantId(merchant.getBankMerchantId())
+                    .bankMerchantPassword(merchant.getBankMerchantPassword())
+                    .build();
+            this.merchantRepository.save(merchantEntity);
+            log.info("Merchant (merchantId: {}) registered!", merchantEntity.getMerchantId());
+            return TransactionResponse.builder()
+                    .success(true)
+                    .message("Merchant is successfully registered!")
+                    .build();
+        } else {
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("An unexpected error occurred!")
+                    .build();
+        }
     }
 
     @Override
@@ -174,8 +216,8 @@ public class BankServiceImpl implements BankService {
         return transaction;
     }
 
-    private String getAcquirerUrl() {
-        return HTTPS_PREFIX + acquirerHost + ":" + acquirerPort;
+    public String getAcquirerUrl() {
+        return HTTPS_PREFIX.concat(acquirerHost).concat(":").concat(acquirerPort).concat("/acquirer");
     }
 
 }

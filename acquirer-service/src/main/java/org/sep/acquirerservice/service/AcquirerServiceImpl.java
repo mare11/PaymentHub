@@ -9,6 +9,7 @@ import org.sep.acquirerservice.repository.CardRepository;
 import org.sep.acquirerservice.repository.TransactionRepository;
 import org.sep.pccservice.api.PccRequest;
 import org.sep.pccservice.api.PccResponse;
+import org.sep.pccservice.api.TransactionStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.sep.pccservice.api.TransactionStatus.OPEN;
-import static org.sep.pccservice.api.TransactionStatus.SUBMITTED;
+import static org.sep.pccservice.api.TransactionStatus.*;
 
 @Slf4j
 @Service
@@ -39,7 +39,6 @@ public class AcquirerServiceImpl implements AcquirerService {
     private String acquirerPan;
 
     @Autowired
-
     public AcquirerServiceImpl(PccService pccService, TransactionRepository transactionRepository, CardRepository cardRepository) {
         this.pccService = pccService;
         this.transactionRepository = transactionRepository;
@@ -49,8 +48,14 @@ public class AcquirerServiceImpl implements AcquirerService {
 
     @Override
     public TransactionResponse prepareTransaction(TransactionRequest transactionRequest) {
-        assertAllNotNull(transactionRequest, transactionRequest.getMerchantId(), transactionRequest.getMerchantPassword(),
+        boolean valid = assertAllNotNull(transactionRequest, transactionRequest.getMerchantId(), transactionRequest.getMerchantPassword(),
                 transactionRequest.getAmount(), transactionRequest.getSuccessUrl(), transactionRequest.getErrorUrl());
+        if (!valid) {
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("All fields are mandatory!")
+                    .build();
+        }
 
         CardEntity cardEntity = cardRepository.findByMerchantIdAndMerchantPassword(transactionRequest.getMerchantId(), transactionRequest.getMerchantPassword());
         if (cardEntity == null) {
@@ -94,11 +99,20 @@ public class AcquirerServiceImpl implements AcquirerService {
 
     @Override
     public TransactionResponse submitTransaction(String id, Card card) {
-        assertAllNotNull(id, card, card.getPan(), card.getCcv(), card.getExpirationDate(), card.getCardholderName());
-        TransactionEntity transaction = getTransactionEntity(id);
+        boolean valid = assertAllNotNull(id, card, card.getPan(), card.getCcv(), card.getExpirationDate(), card.getCardholderName());
+        if (!valid) {
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("All fields are mandatory!")
+                    .build();
+        }
 
+        TransactionEntity transaction = getTransactionEntity(id);
         if (OPEN != transaction.getStatus()) {
-            throw new InvalidDataException();
+            return TransactionResponse.builder()
+                    .success(false)
+                    .message("Payment has already been made!")
+                    .build();
         }
 
         if (!card.getPan().startsWith(acquirerPan)) {
@@ -115,8 +129,17 @@ public class AcquirerServiceImpl implements AcquirerService {
                             .build());
 
             if (!response.isSuccess()) {
+                // FIXME: ZBUDZ :/
+                boolean failed = response.getAcquirerOrderId() != null;
+                if (failed) {
+                    transaction.setStatus(FAILED);
+                    transactionRepository.save(transaction);
+                    log.info("Transaction failed! Message: {}", response.getMessage());
+                }
                 return TransactionResponse.builder()
-                        .paymentUrl(transaction.getErrorUrl())
+                        .paymentUrl(failed ? transaction.getErrorUrl() : null)
+                        .success(false)
+                        .message(response.getMessage())
                         .build();
             }
 
@@ -125,7 +148,10 @@ public class AcquirerServiceImpl implements AcquirerService {
             CardEntity customerCard = cardRepository.findByPanAndCcv(card.getPan(), card.getCcv());
             if (customerCard == null || customerCard.getExpirationDate().isBefore(LocalDate.now())) {
                 log.error("Card not found or expired (transactionId: {}, pan: {})", transaction.getId(), card.getPan());
-                throw new InvalidDataException();
+                return TransactionResponse.builder()
+                        .success(false)
+                        .message("Card not found or expired!")
+                        .build();
             }
 
             if (customerCard.getAvailableAmount() - transaction.getAmount() < 0) {
@@ -133,6 +159,8 @@ public class AcquirerServiceImpl implements AcquirerService {
                         transaction.getId(), transaction.getAmount(), customerCard.getAvailableAmount());
                 return TransactionResponse.builder()
                         .paymentUrl(transaction.getErrorUrl())
+                        .success(false)
+                        .message("Payment failed! Insufficient funds!")
                         .build();
             }
 
@@ -150,13 +178,27 @@ public class AcquirerServiceImpl implements AcquirerService {
 
         return TransactionResponse.builder()
                 .paymentUrl(transaction.getSuccessUrl())
+                .success(true)
+                .message("Payment is successful!")
                 .build();
     }
 
-    private void assertAllNotNull(Object... objects) {
+    @Override
+    public TransactionStatus getTransactionStatus(String id) {
+        return getTransactionEntity(id).getStatus();
+    }
+
+    @Override
+    public Boolean checkClientExistence(Client client) {
+        CardEntity cardEntity = cardRepository.findByMerchantIdAndMerchantPassword(client.getBankMerchantId(), client.getBankMerchantPassword());
+        return cardEntity != null;
+    }
+
+    private boolean assertAllNotNull(Object... objects) {
         if (Stream.of(objects).anyMatch(Objects::isNull)) {
-            throw new InvalidDataException();
+            return false;
         }
+        return true;
     }
 
     private TransactionEntity getTransactionEntity(String id) {

@@ -15,8 +15,13 @@ $(document).ready(
             data: data,
             dataType: 'json',
             success: function (response) {
-                if (response && response.paymentUrl) {
-                    window.location.href = response.paymentUrl;
+                if (response) {
+                    alert(response.message);
+                    if (response.paymentUrl) {
+                        window.location.href = response.paymentUrl;
+                    }
+                } else {
+                    alert('An unexpected error occurred!');
                 }
             }
         });

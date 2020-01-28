@@ -7,7 +7,7 @@
     <title>Payment card registration</title>
 </head>
 <body>
-<div class="container-fluid">
+<div class="container-fluid" id="reg_container">
     <div class="row justify-content-center mt-5">
         <h1 class="display-4 my-4">Please enter your merchant credentials</h1>
     </div>
@@ -26,6 +26,9 @@
         </div>
         <input type="hidden" th:value="${merchantId}" name="merchantId" id="merchantId"/>
     </form>
+</div>
+<div style="display: none" id="reg_confirmed">
+    <h1 class="text-center">Merchant registration is successful!</h1>
 </div>
 <script type="text/javascript" th:src="@{/webjars/jquery/3.3.1/jquery.js}"></script>
 <script type="text/javascript" th:src="@{/registration.js}"></script>

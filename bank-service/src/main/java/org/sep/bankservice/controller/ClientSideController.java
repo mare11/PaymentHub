@@ -1,12 +1,12 @@
 package org.sep.bankservice.controller;
 
 import org.sep.bankservice.model.Merchant;
+import org.sep.bankservice.model.TransactionResponse;
 import org.sep.bankservice.service.BankService;
 import org.sep.paymentgatewayservice.method.api.PaymentCompleteRequest;
 import org.sep.paymentgatewayservice.method.api.PaymentStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +29,8 @@ public class ClientSideController {
 
     @ResponseBody
     @PostMapping(value = "/register_merchant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerMerchant(@RequestBody final Merchant merchant) {
-        return ResponseEntity.ok(this.bankService.registerMerchant(merchant));
+    public TransactionResponse registerMerchant(@RequestBody final Merchant merchant) {
+        return this.bankService.registerMerchant(merchant);
     }
 
     @GetMapping(value = "/success_payment")

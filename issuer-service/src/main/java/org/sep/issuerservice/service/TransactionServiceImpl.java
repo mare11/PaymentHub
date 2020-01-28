@@ -60,8 +60,10 @@ public class TransactionServiceImpl implements TransactionService {
             log.error("No enough available money (transactionAmount: {}, availableAmount: {})",
                     request.getAmount(), card.getAvailableAmount());
             return PccResponse.builder()
+                    .acquirerOrderId(request.getAcquirerOrderId())
+                    .acquirerTimestamp(request.getAcquirerTimestamp())
                     .success(false)
-                    .message("No enough available money!")
+                    .message("Payment failed! Insufficient funds!")
                     .build();
         }
 

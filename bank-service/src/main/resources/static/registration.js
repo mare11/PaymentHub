@@ -14,10 +14,18 @@ $(document).ready(
             type: 'post',
             contentType: 'application/json',
             data: data,
-            dataType: 'text',
+            dataType: 'json',
             success: function (response) {
-                // window.location.href = response;
-                alert(response);
+                if (response) {
+                    if (response.success) {
+                        $('#reg_container').hide(300);
+                        $('#reg_confirmed').show(300);
+                    } else {
+                        alert(response.message);
+                    }
+                } else {
+                    alert('An unexpected error occurred!');
+                }
             }
         });
     })
