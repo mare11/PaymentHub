@@ -157,6 +157,9 @@ public class AcquirerServiceImpl implements AcquirerService {
             if (customerCard.getAvailableAmount() - transaction.getAmount() < 0) {
                 log.error("No enough available money (transactionId: {}, transactionAmount: {}, availableAmount: {})",
                         transaction.getId(), transaction.getAmount(), customerCard.getAvailableAmount());
+                transaction.setStatus(FAILED);
+                transactionRepository.save(transaction);
+                log.info("Payment failed! Insufficient funds!");
                 return TransactionResponse.builder()
                         .paymentUrl(transaction.getErrorUrl())
                         .success(false)
