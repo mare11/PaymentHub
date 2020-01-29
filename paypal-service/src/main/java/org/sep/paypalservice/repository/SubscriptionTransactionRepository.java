@@ -1,6 +1,6 @@
 package org.sep.paypalservice.repository;
 
-import org.sep.paypalservice.model.SubscriptionStatus;
+import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paypalservice.model.SubscriptionTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

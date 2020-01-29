@@ -17,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Period;
 
 @Component
 @Slf4j
@@ -85,5 +87,10 @@ public class PayPalUtil {
         }
 
         return object;
+    }
+
+    public boolean isTransactionExpired(final String expirationPeriod, final LocalDateTime timestamp) {
+        if (timestamp == null || expirationPeriod == null) return true;
+        return timestamp.plus(Period.parse(expirationPeriod)).isBefore(LocalDateTime.now());
     }
 }

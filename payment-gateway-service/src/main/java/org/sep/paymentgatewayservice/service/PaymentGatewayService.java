@@ -1,8 +1,8 @@
 package org.sep.paymentgatewayservice.service;
 
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
-import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
+import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 
@@ -28,4 +28,6 @@ public interface PaymentGatewayService {
     SubscriptionCancelResponse cancelSubscription(SubscriptionCancelRequest subscriptionCancelRequest);
 
     MerchantOrderStatus checkOrderStatus(String orderId);
+
+    SubscriptionStatus checkSubscriptionStatus(String subscriptionId);
 }

@@ -7,13 +7,11 @@ import org.sep.paymentgatewayservice.payment.entity.SubscriptionPlan;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionRequest;
 import org.sep.paymentgatewayservice.payment.entity.SubscriptionResponse;
 import org.sep.sellerservice.dto.CustomerSubscriptionDto;
-import org.sep.sellerservice.exceptions.NoMerchantFoundException;
-import org.sep.sellerservice.exceptions.NoSubscriptionFoundException;
-import org.sep.sellerservice.exceptions.NoSubscriptionPlansFoundException;
-import org.sep.sellerservice.exceptions.SubscriptionCreationException;
+import org.sep.sellerservice.exceptions.*;
 import org.sep.sellerservice.model.Merchant;
 import org.sep.sellerservice.model.Subscription;
 import org.sep.sellerservice.repository.SubscriptionRepository;
+import org.sep.sellerservice.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -28,12 +26,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final MerchantService merchantService;
     private final PaymentGatewayServiceApi paymentGatewayServiceApi;
+    private final Util util;
 
     @Autowired
-    public SubscriptionServiceImpl(final SubscriptionRepository subscriptionRepository, final MerchantService merchantService, final PaymentGatewayServiceApi paymentGatewayServiceApi) {
+    public SubscriptionServiceImpl(final SubscriptionRepository subscriptionRepository, final MerchantService merchantService, final PaymentGatewayServiceApi paymentGatewayServiceApi, final Util util) {
         this.subscriptionRepository = subscriptionRepository;
         this.merchantService = merchantService;
         this.paymentGatewayServiceApi = paymentGatewayServiceApi;
+        this.util = util;
     }
 
     @Override
@@ -101,6 +101,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscription == null) {
             throw new NoSubscriptionFoundException(customerSubscriptionDto.getMerchantSubscriptionId());
+        }
+
+        if (this.util.isTransactionExpired(subscription.getTimestamp())) {
+            log.error("Subscription with id '{}' has expired", subscription.getId());
+            throw new OrderHasExpiredException(subscription.getId());
         }
 
         subscription.setPlanId(String.valueOf(customerSubscriptionDto.getPlan().getId()));

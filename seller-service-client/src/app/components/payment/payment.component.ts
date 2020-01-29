@@ -46,6 +46,8 @@ export class PaymentComponent implements OnInit {
           }
         }
       );
+    } else {
+      alert('Please select payment method.');
     }
   }
 

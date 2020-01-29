@@ -26,8 +26,9 @@ PlanEntity {
     @Column(nullable = false)
     private String planName;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String intervalUnit;
+    private IntervalUnit intervalUnit;
 
     @Column(nullable = false)
     private Integer intervalCount;

@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
-import org.sep.paymentgatewayservice.seller.api.MerchantPaymentMethods;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,11 +27,6 @@ public class GatewayConfig {
 
     @Bean
     public Map<String, PaymentMethodData> paymentMethodDataMap() {
-        return new HashMap<>();
-    }
-
-    @Bean
-    public Map<String, MerchantPaymentMethods> merchantPaymentMethodsMap() {
         return new HashMap<>();
     }
 
