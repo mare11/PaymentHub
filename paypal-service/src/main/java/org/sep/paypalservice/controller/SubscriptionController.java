@@ -1,6 +1,7 @@
 package org.sep.paypalservice.controller;
 
 import org.sep.paymentgatewayservice.method.api.SubscriptionApi;
+import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
@@ -39,8 +40,13 @@ public class SubscriptionController implements SubscriptionApi {
         return ResponseEntity.ok(this.subscriptionService.cancelSubscription(subscriptionCancelRequest));
     }
 
+    @Override
+    public ResponseEntity<SubscriptionStatus> getSubscriptionStatus(final String subscriptionId) {
+        return ResponseEntity.ok(this.subscriptionService.getSubscriptionStatus(subscriptionId));
+    }
+
     @PostMapping(value = "/subscription_transaction", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RedirectionDto> getPaymentTransaction(@RequestBody final CompleteDto completeDto) {
+    public ResponseEntity<RedirectionDto> completeSubscriptionTransaction(@RequestBody final CompleteDto completeDto) {
         return ResponseEntity.ok(this.subscriptionService.completeSubscriptionTransaction(completeDto));
     }
 }

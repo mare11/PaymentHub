@@ -5,6 +5,7 @@ import com.paypal.orders.LinkDescription;
 import com.paypal.orders.Money;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
@@ -21,10 +22,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -125,7 +123,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
 
         final Frequency frequency = Frequency.builder()
-                .intervalUnit(planEntity.getIntervalUnit())
+                .intervalUnit(planEntity.getIntervalUnit().name())
                 .intervalCount(planEntity.getIntervalCount())
                 .build();
 
@@ -305,6 +303,31 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public SubscriptionStatus getSubscriptionStatus(final String subscriptionId) {
+        log.info("Retrieving status of subscription transaction with id '{}'", subscriptionId);
+        final SubscriptionTransaction subscriptionTransaction = this.subscriptionTransactionRepository.findByMerchantSubscriptionId(subscriptionId);
+
+        if (subscriptionTransaction == null) {
+            log.error("Subscription transaction with id '{}' does not exist", subscriptionId);
+            return null;
+        }
+
+        if (subscriptionTransaction.getStatus().equals(SubscriptionStatus.EXPIRED)) {
+            final boolean transactionExpired
+                    = this.payPalUtil.isTransactionExpired(this.periodBuilder(subscriptionTransaction.getPlanEntity().getIntervalUnit(),
+                    subscriptionTransaction.getPlanEntity().getIntervalCount(),
+                    subscriptionTransaction.getTotalCycles()), subscriptionTransaction.getCreatedAt());
+            if (!transactionExpired) {
+                return SubscriptionStatus.ACTIVE;
+            } else {
+                return subscriptionTransaction.getStatus();
+            }
+        } else {
+            return subscriptionTransaction.getStatus();
+        }
+    }
+
+    @Override
     @Scheduled(initialDelay = PayPalUtil.SCHEDULER_INITIAL_DELAY_IN_SECONDS * 1000, fixedDelay = PayPalUtil.SCHEDULER_DELAY_IN_SECONDS * 1000)
     public void checkUnfinishedTransactions() {
         this.checkTransactionsByStatus(SubscriptionStatus.APPROVAL_PENDING);
@@ -345,5 +368,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscriptionTransaction.getSubscriptionId(),
                 subscriptionStatusToBeChanged.name(),
                 status.name());
+    }
+
+    private String periodBuilder(final IntervalUnit intervalUnit, final Integer intervalCount, final Integer totalCycles) {
+        if (Stream.of(intervalUnit, intervalCount, totalCycles).anyMatch(Objects::isNull)) {
+            return "P0D";
+        }
+        log.info("Building period for interval unit {} with interval count {} and total cycles {}", intervalUnit, intervalCount, totalCycles);
+        final String periodUnit = intervalUnit == IntervalUnit.MONTH ? "M" : "Y";
+        final String period = "P".concat(String.valueOf(intervalCount * totalCycles)).concat(periodUnit);
+        log.info("Built period: {}", period);
+        return period;
     }
 }

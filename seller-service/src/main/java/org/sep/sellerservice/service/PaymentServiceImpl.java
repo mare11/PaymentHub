@@ -1,23 +1,26 @@
 package org.sep.sellerservice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.sep.paymentgatewayservice.api.PaymentGatewayServiceApi;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
 import org.sep.paymentgatewayservice.payment.entity.PaymentResponse;
+import org.sep.paymentgatewayservice.seller.api.OrderPaymentMethod;
 import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 import org.sep.sellerservice.dto.CustomerPaymentDto;
 import org.sep.sellerservice.exceptions.MerchantIsNotEnabledException;
 import org.sep.sellerservice.exceptions.NoMerchantFoundException;
 import org.sep.sellerservice.exceptions.NoPaymentFoundException;
+import org.sep.sellerservice.exceptions.OrderHasExpiredException;
 import org.sep.sellerservice.model.Merchant;
 import org.sep.sellerservice.model.Payment;
 import org.sep.sellerservice.model.PaymentMethodEntity;
 import org.sep.sellerservice.repository.PaymentRepository;
+import org.sep.sellerservice.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -27,12 +30,16 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final MerchantService merchantService;
     private final PaymentGatewayServiceApi paymentGatewayServiceApi;
+    private final Util util;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public PaymentServiceImpl(final PaymentRepository paymentRepository, final MerchantService merchantService, final PaymentGatewayServiceApi paymentGatewayServiceApi) {
+    public PaymentServiceImpl(final PaymentRepository paymentRepository, final MerchantService merchantService, final PaymentGatewayServiceApi paymentGatewayServiceApi, final Util util) {
         this.paymentRepository = paymentRepository;
         this.merchantService = merchantService;
         this.paymentGatewayServiceApi = paymentGatewayServiceApi;
+        this.util = util;
+        this.modelMapper = new ModelMapper();
     }
 
     @Override
@@ -93,6 +100,11 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NoPaymentFoundException(customerPaymentDto.getMerchantOrderId());
         }
 
+        if (this.util.isTransactionExpired(payment.getTimestamp())) {
+            log.error("Payment with id '{}' has expired", payment.getId());
+            throw new OrderHasExpiredException(payment.getId());
+        }
+
         if (!payment.getMerchant().getEnabled()) {
             log.error("Merchant is not enabled");
             throw new MerchantIsNotEnabledException(payment.getMerchant().getId());
@@ -120,23 +132,33 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentMethod getOrderPaymentMethod(String orderId) {
+    public OrderPaymentMethod getOrderPaymentMethod(final String orderId) {
         log.info("Retrieve payment with order id: {}", orderId);
-        Optional<Payment> payment = this.paymentRepository.findById(orderId);
-        if (payment.isEmpty()){
+        final Payment payment = this.findById(orderId);
+        if (payment == null) {
             log.error("Payment with order id: {} not found", orderId);
             throw new NoPaymentFoundException(orderId);
         }
-        PaymentMethodEntity paymentMethodEntity = payment.get().getPaymentMethodEntity();
-        if (paymentMethodEntity == null){
+
+        if (this.util.isTransactionExpired(payment.getTimestamp())) {
+            log.error("Payment with order id: {} has expired", orderId);
+            return OrderPaymentMethod.builder()
+                    .orderExpired(true)
+                    .build();
+        }
+
+        final PaymentMethodEntity paymentMethodEntity = payment.getPaymentMethodEntity();
+        if (paymentMethodEntity == null) {
             log.warn("Payment method hasn't been set yet");
-            return null;
+            return OrderPaymentMethod.builder()
+                    .orderExpired(false)
+                    .build();
         }
 
         log.info("Order payment method: {} sent back to gateway", paymentMethodEntity.getName());
-        return PaymentMethod.builder()
-                .id(paymentMethodEntity.getId())
-                .name(paymentMethodEntity.getName())
+        return OrderPaymentMethod.builder()
+                .paymentMethod(this.modelMapper.map(paymentMethodEntity, PaymentMethod.class))
+                .orderExpired(false)
                 .build();
     }
 }

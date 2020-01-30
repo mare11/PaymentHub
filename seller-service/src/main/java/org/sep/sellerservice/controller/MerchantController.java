@@ -4,6 +4,7 @@ import org.sep.paymentgatewayservice.api.MerchantRequest;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.MerchantServiceApi;
+import org.sep.paymentgatewayservice.seller.api.OrderPaymentMethod;
 import org.sep.paymentgatewayservice.seller.api.PaymentMethod;
 import org.sep.sellerservice.dto.*;
 import org.sep.sellerservice.model.Merchant;
@@ -82,7 +83,7 @@ public class MerchantController implements MerchantServiceApi {
     }
 
     @Override
-    public ResponseEntity<PaymentMethod> getOrderPaymentMethod(String orderId) {
+    public ResponseEntity<OrderPaymentMethod> getOrderPaymentMethod(final String orderId) {
         return ResponseEntity.ok(this.paymentService.getOrderPaymentMethod(orderId));
     }
 

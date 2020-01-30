@@ -3,10 +3,10 @@ package org.sep.paymentgatewayservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.exceptions.NoPaymentMethodFoundException;
-import org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodApi;
 import org.sep.paymentgatewayservice.method.api.PaymentMethodData;
 import org.sep.paymentgatewayservice.method.api.SubscriptionApi;
+import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paymentgatewayservice.seller.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +29,14 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private final PaymentMethodApi paymentMethodApi;
     private final SubscriptionApi subscriptionApi;
     private final Map<String, PaymentMethodData> paymentMethodDataMap;
-    private final Map<String, MerchantPaymentMethods> merchantPaymentMethodsMap;
 
     @Autowired
-    public PaymentGatewayServiceImpl(final MerchantServiceApi merchantServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final SubscriptionApi subscriptionApi, final Map<String, PaymentMethodData> paymentMethodDataMap, final Map<String, MerchantPaymentMethods> merchantPaymentMethodsMap) {
+    public PaymentGatewayServiceImpl(final MerchantServiceApi merchantServiceApi, final PaymentMethodServiceApi paymentMethodServiceApi, final PaymentMethodApi paymentMethodApi, final SubscriptionApi subscriptionApi, final Map<String, PaymentMethodData> paymentMethodDataMap) {
         this.merchantServiceApi = merchantServiceApi;
         this.paymentMethodServiceApi = paymentMethodServiceApi;
         this.paymentMethodApi = paymentMethodApi;
         this.subscriptionApi = subscriptionApi;
         this.paymentMethodDataMap = paymentMethodDataMap;
-        this.merchantPaymentMethodsMap = merchantPaymentMethodsMap;
     }
 
     @Override
@@ -165,21 +163,33 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public MerchantOrderStatus checkOrderStatus(final String orderId) {
         Assert.notNull(orderId, "Order id can't be null!");
         log.info("Order (id: {}) payment method request sent to seller service", orderId);
-        PaymentMethod paymentMethod = this.merchantServiceApi.getOrderPaymentMethod(orderId).getBody();
-        if (paymentMethod == null){
+        final OrderPaymentMethod orderPaymentMethod = this.merchantServiceApi.getOrderPaymentMethod(orderId).getBody();
+
+        if (orderPaymentMethod == null || orderPaymentMethod.getOrderExpired()) {
+            log.info("Payment method has expired");
+            return MerchantOrderStatus.EXPIRED;
+        }
+
+        if (orderPaymentMethod.getPaymentMethod() == null) {
             log.warn("Payment method hasn't been set yet");
             return MerchantOrderStatus.IN_PROGRESS;
         }
 
-        final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(paymentMethod.getName());
+        final PaymentMethodData paymentMethodData = this.paymentMethodDataMap.get(orderPaymentMethod.getPaymentMethod().getName());
 
         if (paymentMethodData == null) {
             log.error("Payment method not found");
-            throw new NoPaymentMethodFoundException(paymentMethod.getName());
+            throw new NoPaymentMethodFoundException(orderPaymentMethod.getPaymentMethod().getName());
         }
 
         final URI serviceBaseUri = this.generateBaseUri(paymentMethodData);
         log.info("Check order status request sent to {} payment method from gateway", paymentMethodData.getName());
         return this.paymentMethodApi.getOrderStatus(serviceBaseUri, orderId).getBody();
+    }
+
+    @Override
+    public SubscriptionStatus checkSubscriptionStatus(final String subscriptionId) {
+        log.info("Calling paypal service to check status of subscription with id '{}'", subscriptionId);
+        return this.subscriptionApi.getSubscriptionStatus(subscriptionId).getBody();
     }
 }

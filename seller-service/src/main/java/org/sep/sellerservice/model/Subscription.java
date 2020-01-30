@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -25,6 +27,9 @@ public class Subscription {
 
     @Column(nullable = false)
     private String returnUrl;
+
+    @CreationTimestamp
+    private LocalDateTime timestamp;
 
     @ManyToOne
     @JoinColumn(nullable = false)

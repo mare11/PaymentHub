@@ -22,4 +22,7 @@ public interface SubscriptionApi {
 
     @PostMapping(value = "/subscription/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<SubscriptionCancelResponse> cancelSubscription(@RequestBody final SubscriptionCancelRequest subscriptionCancelRequest);
+
+    @GetMapping(value = "/subscription/{subscriptionId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<SubscriptionStatus> getSubscriptionStatus(@PathVariable String subscriptionId);
 }

@@ -30,8 +30,8 @@ public interface MerchantServiceApi {
     ResponseEntity<RedirectionResponse> prepareSubscription(@RequestBody MerchantRequest merchantRequest);
 
     @GetMapping(value = "/payment_method/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<PaymentMethod> getOrderPaymentMethod(@PathVariable String orderId);
-    
+    ResponseEntity<OrderPaymentMethod> getOrderPaymentMethod(@PathVariable String orderId);
+
     @PostMapping(value = "/notify", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Boolean> notifyMerchantIsRegistered(@RequestBody NotifyPaymentMethodRegistrationDto notifyPaymentMethodRegistrationDto);
 }
