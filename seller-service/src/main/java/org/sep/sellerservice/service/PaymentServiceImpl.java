@@ -66,6 +66,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .returnUrl(paymentRequest.getReturnUrl())
                 .build();
         this.paymentRepository.save(payment);
+        payment.setReturnUrl(payment.getReturnUrl() + '/' + payment.getId());
+        this.paymentRepository.save(payment);
         log.info("Payment (merchant: {}, merchant order id: {}) is created and saved in seller", payment.getMerchant().getId(), payment.getId());
         return payment.getId();
     }

@@ -5,6 +5,7 @@ import org.sep.paymentgatewayservice.api.RedirectionResponse;
 import org.sep.paymentgatewayservice.payment.entity.FeignConfiguration;
 import org.sep.paymentgatewayservice.payment.entity.NotifyPaymentMethodRegistrationDto;
 import org.sep.paymentgatewayservice.payment.entity.PaymentRequest;
+import org.sep.paymentgatewayservice.payment.entity.RegistrationCompleteDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,9 @@ public interface MerchantServiceApi {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<RedirectionResponse> registerMerchant(@RequestBody MerchantRequest merchantRequest);
+
+    @GetMapping(value = "/complete_registration/{merchantId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<RegistrationCompleteDto> completeRegistration(@PathVariable String merchantId);
 
     @PostMapping(value = "/prepare_payment", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<RedirectionResponse> preparePayment(@RequestBody PaymentRequest paymentRequest);

@@ -41,11 +41,25 @@ public class MerchantController implements MerchantServiceApi {
     @Override
     public ResponseEntity<RedirectionResponse> registerMerchant(final MerchantRequest merchantRequest) {
         final Merchant merchant = this.merchantService.save(merchantRequest);
+        merchant.setReturnUrl(merchant.getReturnUrl() + '/' + merchant.getId());
+        this.merchantService.update(merchant);
         final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
                 .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/seller/" + merchant.getId())
                 .id(merchant.getId())
                 .build();
         return ResponseEntity.ok(redirectionResponse);
+    }
+
+    @Override
+    public ResponseEntity<RegistrationCompleteDto> completeRegistration(String merchantId) {
+        Merchant merchant = this.merchantService.findById(merchantId);
+        if (merchant == null){
+            throw new NullPointerException("Merchant with id: " + merchantId + "is null");
+        }
+        RegistrationCompleteDto registrationCompleteDto = RegistrationCompleteDto.builder()
+                .flag(merchant.getEnabled())
+                .build();
+        return ResponseEntity.ok(registrationCompleteDto);
     }
 
     @Override
