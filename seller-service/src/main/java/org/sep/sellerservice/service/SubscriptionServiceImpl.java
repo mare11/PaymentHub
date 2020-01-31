@@ -61,6 +61,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
 
         this.subscriptionRepository.save(subscription);
+        subscription.setReturnUrl(subscription.getReturnUrl() + '/' + subscription.getId());
+        this.subscriptionRepository.save(subscription);
         log.info("Subscription with id '{}' is saved into DB successfully", subscription.getId());
 
         return subscription.getId();

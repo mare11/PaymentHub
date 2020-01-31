@@ -78,6 +78,7 @@ public class MerchantController implements MerchantServiceApi {
         final String subscriptionId = this.subscriptionService.prepareSubscription(merchantRequest);
         final RedirectionResponse redirectionResponse = RedirectionResponse.builder()
                 .redirectionUrl(HTTPS_PREFIX + this.SERVER_ADDRESS + ":" + this.FRONTEND_PORT + "/subscription/" + subscriptionId)
+                .id(subscriptionId)
                 .build();
         return ResponseEntity.ok(redirectionResponse);
     }

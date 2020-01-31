@@ -9,10 +9,7 @@ import org.sep.paymentgatewayservice.method.api.SubscriptionStatus;
 import org.sep.paymentgatewayservice.payment.entity.*;
 import org.sep.paypalservice.dto.CompleteDto;
 import org.sep.paypalservice.dto.RedirectionDto;
-import org.sep.paypalservice.exceptions.NoPlanFoundException;
-import org.sep.paypalservice.exceptions.NoSubscriptionFoundException;
-import org.sep.paypalservice.exceptions.RequestCouldNotBeExecutedException;
-import org.sep.paypalservice.exceptions.ResourceNotFoundException;
+import org.sep.paypalservice.exceptions.*;
 import org.sep.paypalservice.model.*;
 import org.sep.paypalservice.repository.PlanEntityRepository;
 import org.sep.paypalservice.repository.SubscriptionTransactionRepository;
@@ -176,14 +173,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public List<SubscriptionPlan> retrieveSubscriptionPlans(final String merchantId) {
         Assert.notNull(merchantId, "Merchant id can't be null!");
 
-        final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsService.findByMerchantId(merchantId);
+        try {
+            final MerchantPaymentDetails merchantPaymentDetails = this.merchantPaymentDetailsService.findByMerchantId(merchantId);
 
-        log.info("Retrieved merchantPaymentDetails object for merchant id '{}'", merchantId);
+            log.info("Retrieved merchantPaymentDetails object for merchant id '{}'", merchantId);
 
-        final Set<PlanEntity> plans = merchantPaymentDetails.getPlans();
-        log.info("Retrieved plans for merchant with id '{}'", merchantId);
+            final Set<PlanEntity> plans = merchantPaymentDetails.getPlans();
+            log.info("Retrieved plans for merchant with id '{}'", merchantId);
 
-        return plans.stream().map(planEntity -> this.modelMapper.map(planEntity, SubscriptionPlan.class)).collect(Collectors.toList());
+            return plans.stream().map(planEntity -> this.modelMapper.map(planEntity, SubscriptionPlan.class)).collect(Collectors.toList());
+        } catch (NoMerchantFoundException e){
+            return null;
+        }
     }
 
     @Override
