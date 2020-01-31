@@ -1,7 +1,6 @@
 package org.sep.issuerservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.sep.issuerservice.exception.InvalidDataException;
 import org.sep.issuerservice.model.CardEntity;
 import org.sep.issuerservice.model.TransactionEntity;
 import org.sep.issuerservice.repository.CardRepository;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.sep.pccservice.api.TransactionStatus.SUBMITTED;
@@ -92,9 +90,12 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 
-    private void assertAllNotNull(Object... objects) {
-        if (Stream.of(objects).anyMatch(Objects::isNull)) {
-            throw new InvalidDataException();
-        }
+    private boolean assertAllNotNull(Object... objects) {
+        return Stream.of(objects)
+                .noneMatch(o -> o == null || isBlankString(o));
+    }
+
+    private boolean isBlankString(Object o) {
+        return o instanceof String && o.toString().isBlank();
     }
 }

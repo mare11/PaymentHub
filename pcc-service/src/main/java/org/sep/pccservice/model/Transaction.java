@@ -40,4 +40,10 @@ public class Transaction {
 
     @Column(nullable = false)
     private String cardholderName;
+
+    @Column
+    private boolean success;
+
+    @Column
+    private String message;
 }

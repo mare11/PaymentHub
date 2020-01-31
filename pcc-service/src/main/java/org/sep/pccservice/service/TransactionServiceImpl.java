@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.sep.pccservice.api.PccRequest;
 import org.sep.pccservice.api.PccResponse;
 import org.sep.pccservice.api.TransactionStatus;
-import org.sep.pccservice.exception.InvalidDataException;
 import org.sep.pccservice.model.Transaction;
 import org.sep.pccservice.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Objects;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -66,13 +64,19 @@ public class TransactionServiceImpl implements TransactionService {
         ResponseEntity<PccResponse> responseEntity = this.restTemplate.exchange(getIssuerUrl(), HttpMethod.POST, requestEntity, PccResponse.class);
         PccResponse response = responseEntity.getBody();
         log.info("Got response from the issuer: {}", response);
+        transaction.setSuccess(response.isSuccess());
+        transaction.setMessage(response.getMessage());
+        transactionRepository.save(transaction);
         return response;
     }
 
-    private void assertAllNotNull(Object... objects) {
-        if (Stream.of(objects).anyMatch(Objects::isNull)) {
-            throw new InvalidDataException();
-        }
+    private boolean assertAllNotNull(Object... objects) {
+        return Stream.of(objects)
+                .noneMatch(o -> o == null || isBlankString(o));
+    }
+
+    private boolean isBlankString(Object o) {
+        return o instanceof String && o.toString().isBlank();
     }
 
     private String getIssuerUrl() {

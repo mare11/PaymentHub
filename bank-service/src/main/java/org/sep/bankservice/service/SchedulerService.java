@@ -13,8 +13,8 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.sep.bankservice.model.TransactionStatus.*;
-import static org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus.CANCELED;
+import static org.sep.bankservice.model.TransactionStatus.OPEN;
+import static org.sep.bankservice.model.TransactionStatus.SUBMITTED;
 import static org.sep.paymentgatewayservice.payment.entity.MerchantOrderStatus.*;
 
 @Slf4j
@@ -49,9 +49,11 @@ public class SchedulerService {
                 TransactionStatus response = this.restTemplate.getForObject(getAcquirerUrl().concat("/").concat(transaction.getBankTransactionId()), TransactionStatus.class);
                 log.info("Got response from acquirer: {}", response);
                 if (shouldChangeStatus(response)) {
-                    if (EXECUTED == response) {
+                    if (TransactionStatus.EXECUTED == response) {
                         transaction.setStatus(FINISHED);
-                    } else { //EXPIRED, CANCELED, FAILED
+                    } else if (TransactionStatus.EXPIRED == response) {
+                        transaction.setStatus(EXPIRED);
+                    } else { // CANCELED, FAILED
                         transaction.setStatus(CANCELED);
                     }
                     transactionRepository.save(transaction);

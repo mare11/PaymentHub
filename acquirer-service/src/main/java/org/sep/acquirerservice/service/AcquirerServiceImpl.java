@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -198,10 +197,12 @@ public class AcquirerServiceImpl implements AcquirerService {
     }
 
     private boolean assertAllNotNull(Object... objects) {
-        if (Stream.of(objects).anyMatch(Objects::isNull)) {
-            return false;
-        }
-        return true;
+        return Stream.of(objects)
+                .noneMatch(o -> o == null || isBlankString(o));
+    }
+
+    private boolean isBlankString(Object o) {
+        return o instanceof String && o.toString().isBlank();
     }
 
     private TransactionEntity getTransactionEntity(String id) {
